@@ -1,0 +1,4 @@
+ext {
+    sonarUrl = "http://localhost:9000"
+    sonarProjectName = "jwarsv-dev"
+}

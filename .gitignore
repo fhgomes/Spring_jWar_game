@@ -22,3 +22,55 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Maven
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!jwar-server/jwarsv-sboot/src/main/**/build/
+!jwar-server/jwarsv-sboot/src/test/**/build/
+
+# Spring and others
+/APP_HOME_IS_UNDEFINED
+/app
+**/bd-data/
+**/postgre-volume/
+**/mongodb-volume/
+**/rabbitmq-volume/
+.flattened-pom.xml
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!jwar-server/jwarsv-sboot/src/main/**/bin/
+!jwar-server/jwarsv-sboot/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!jwar-server/jwarsv-sboot/src/main/**/out/
+!jwar-server/jwarsv-sboot/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/

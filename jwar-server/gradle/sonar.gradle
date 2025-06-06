@@ -1,0 +1,27 @@
+apply plugin: "org.sonarqube"
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "${jacocoToolVersion}"
+}
+
+jacocoTestReport {
+    reports {
+    }
+}
+sonarqube {
+    properties{
+        property "sonar.host.url", sonarUrl
+        property 'sonar.projectName', "${sonarProjectName}"
+        property 'sonar.exclusions',
+                            "**Constants**"+
+                            ", **Application**"
+        property 'sonar.coverage.exclusions',
+                            "**Application.java" +
+                                    ",**Constants**" +
+                                    ",**/config/**"
+        property 'sonar.cpd.exclusions',
+                            "**/dto/**, **/model/**, **/domain/**"
+        property "sonar.sourceEncoding", "UTF-8"
+    }
+}

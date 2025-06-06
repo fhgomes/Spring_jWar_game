@@ -1,0 +1,32 @@
+plugins {
+    id "java"
+	id "io.spring.dependency-management" version "${springDepManagementPluginVersion}"
+    id "org.hibernate.orm" version "${hibernateOrmPluginVersion}"
+}
+
+
+dependencies {
+
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-data-rest"
+    implementation "com.google.firebase:firebase-admin"
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+	implementation "com.opencsv:opencsv:${openCSVVersion}"
+
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+    testImplementation platform("org.junit:junit-bom:${junitVersion}")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'jwarsv-core',
+                'Implementation-Version': version
+    }
+}

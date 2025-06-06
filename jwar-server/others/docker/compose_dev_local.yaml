@@ -1,0 +1,39 @@
+services:
+
+  postgres-jwarsv-qa-prod_local:
+    image: postgres:16.4-alpine
+    container_name: postgres-jwarsv-qa-prod_local
+    restart: always
+    networks:
+      - postgres-network-local
+    environment:
+      - POSTGRES_USER=${JWARSV_PG_ADMIN_USER:-jwarsvadm}
+      - POSTGRES_PASSWORD=${JWARSV_ENV_PG_ADMIN_PW:-jwarsvadm@123}
+      - JWARSV_DB_DEV_PASSWORD=${JWARSV_ENV_DEV_APP_DB_PW:-jwarsvdev@123}
+      - JWARSV_DB_PROD_PASSWORD=${JWARSV_ENV_PROD_APP_DB_PW:-jwarsvprod@456}
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./postgresql/init-database_local.sh:/docker-entrypoint-initdb.d/init-database.sh
+      - pg_db_volume_dev_local:/home/ec2-user/docker-data/postgresql/data:rwx
+
+  jwarsv-nginx-server-qa-prod-local:
+    image: nginx:1.27.0-alpine
+    container_name: jwarsv-nginx-server-qa-prod-local
+    volumes:
+      - ./nginx/default_local.conf:/etc/nginx/conf.d/default.conf:rw
+      - ./nginx/ssl/cloudflaresigned.crt:/etc/nginx/ssl/cloudflaresigned.crt:r
+      - ./nginx/ssl/cloudflaresigned.key:/etc/nginx/ssl/cloudflaresigned.key:r
+    ports:
+      #        - ${APP_PORT:32280}:80
+      - "80:80"
+      - "443:443"
+
+volumes:
+  pg_db_volume_dev_local:
+    driver: local
+
+networks:
+  postgres-network-local:
+    external: false
+    driver: bridge

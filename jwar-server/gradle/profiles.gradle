@@ -1,0 +1,20 @@
+/*
+ How to use Profiles with -P arguments
+ ----
+ Run gradle task with the -PbuildProfile= argument to utilize a profile.
+
+ For example, within a subproject's directory:
+ gradle -PbuildProfile=dev sonar
+
+ Or, if in the parent project's directory,
+ individual projects can be targeted using their name:
+ gradle -PbuildProfile=dev subProject:sonar
+*/
+
+if (!hasProperty('buildProfile')) {
+    ext.buildProfile = 'dev'
+}
+apply from: rootProject.file("gradle/profile_${buildProfile}.gradle")
+
+println 'Using profile: "' + buildProfile + '" for ' + project.getName()
+println 'Config: "' + sonarUrl + '" - "' + sonarProjectName +'"'

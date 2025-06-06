@@ -1,0 +1,67 @@
+apply plugin: 'jacoco'
+
+allprojects {
+    test {
+        exclude '**/CucumberTest*'
+        useJUnitPlatform {
+            excludeTags 'slow', 'integration'
+        }
+        systemProperty 'junit.jupiter.conditions.deactivate', '*'
+        systemProperties = [
+                'junit.jupiter.extensions.autodetection.enabled': 'true',
+                'junit.jupiter.testinstance.lifecycle.default'  : 'per_method'
+        ]
+
+        // show standard out and standard error of the test JVM(s) on the console
+        testLogging.showStandardStreams = false
+
+        // set heap size for the test JVM(s)
+        minHeapSize = "128m"
+        maxHeapSize = "1024m"
+
+        // Fail the 'test' task on the first test failure
+        failFast = false
+
+        afterSuite { desc, result ->
+            if (!desc.parent) {
+                println "\nTest result: ${result.resultType}"
+                println "Test summary: ${result.testCount} tests, " +
+                        "${result.successfulTestCount} succeeded, " +
+                        "${result.failedTestCount} failed, " +
+                        "${result.skippedTestCount} skipped"
+            }
+        }
+    }
+}
+
+task testOnlyResources(type:Test) {
+    useJUnitPlatform {
+        //uso de tags
+        includeTags 'resource'
+    }
+    systemProperty 'junit.jupiter.conditions.deactivate', '*'
+    systemProperties = [
+            'junit.jupiter.extensions.autodetection.enabled': 'true',
+            'junit.jupiter.testinstance.lifecycle.default': 'per_method'
+    ]
+
+    // show standard out and standard error of the test JVM(s) on the console
+    testLogging.showStandardStreams = false
+
+    // set heap size for the test JVM(s)
+    minHeapSize = "128m"
+    maxHeapSize = "1024m"
+
+    // Fail the 'test' task on the first test failure
+    failFast = false
+
+    afterSuite { desc, result ->
+        if (!desc.parent) {
+            println "\nTest result: ${result.resultType}"
+            println "Test summary: ${result.testCount} tests, " +
+                    "${result.successfulTestCount} succeeded, " +
+                    "${result.failedTestCount} failed, " +
+                    "${result.skippedTestCount} skipped"
+        }
+    }
+}

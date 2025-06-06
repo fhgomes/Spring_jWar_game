@@ -1,0 +1,77 @@
+plugins {
+	id "java"
+	id "io.spring.dependency-management" version "${springDepManagementPluginVersion}"
+	id "org.sonarqube" version "${sonarPluginVersion}"
+}
+
+apply from: 'gradle/repositories.gradle'
+
+
+dependencyManagement {
+	dependencies {
+		"org.projectlombok:lombok:${lombokVer}"
+	}
+}
+
+allprojects {
+	configurations.configureEach {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+	}
+}
+
+subprojects {
+	apply plugin: 'java'
+	apply plugin: "io.spring.dependency-management"
+
+	compileJava {
+		options.compilerArgs << '-parameters'
+	}
+
+	java {
+		sourceCompatibility = JavaVersion.VERSION_17
+		targetCompatibility = JavaVersion.VERSION_17
+	}
+
+	dependencies {
+		compileOnly "org.projectlombok:lombok:${lombokVer}"
+
+		annotationProcessor "org.projectlombok:lombok:${lombokVer}"
+
+		implementation "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+		implementation "commons-io:commons-io:${commonsIOVersion}"
+
+		implementation "com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations:${jakartaXmlbindAnnotations}"
+		implementation "io.hypersistence:hypersistence-utils-hibernate-62:${hypersistenceUtilsHibernateVersion}"
+		implementation 'io.netty:netty-common:4.1.70.Final'
+
+		testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+		testRuntimeOnly(
+				"org.junit.platform:junit-platform-launcher",
+				"org.junit.jupiter:junit-jupiter-engine:${junitVersion}",
+				"org.junit.vintage:junit-vintage-engine:${junitVersion}"
+		)
+	}
+
+	dependencyManagement {
+		imports {
+			mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+			mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+			mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+			mavenBom "io.sentry:sentry-bom:${sentryVersion}"
+		}
+
+		dependencies {
+			dependency ("com.google.firebase:firebase-admin:${firebaseAdminVersion}") {
+				exclude "io.netty:netty-common"
+			}
+		}
+	}
+}
+
+tasks.register('printAppVersion') {
+	println "app-version: ${project.version}"
+}
+
+apply from: 'gradle/profiles.gradle'
+apply from: 'gradle/tests.gradle'
+apply from: 'gradle/sonar.gradle'

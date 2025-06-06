@@ -1,0 +1,5 @@
+rootProject.name = 'jwar-server'
+
+include 'jwarsv-core'
+include 'jwarsv-sboot'
+

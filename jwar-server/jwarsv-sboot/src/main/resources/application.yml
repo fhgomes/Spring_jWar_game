@@ -1,0 +1,120 @@
+server:
+  port: 8080
+  shutdown: graceful
+  # since version 2.3, Spring Boot hides the message field in the response to avoid leaking sensitive information
+  error.include-message: always
+  # This is required in order for X-Forwarded-* headers to be handled properly.
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    ROOT: 'INFO'
+
+spring:
+  application:
+    name: jwar-server-sb
+  datasource:
+    driverClassName: org.postgresql.Driver
+
+    hikari:
+      maximumPoolSize: 2
+      maxLifetime: 180000 #3 minutes
+      idleTimeout: 50000
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate.show_sql: true
+      hibernate.format_sql: true
+
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE: true
+      fail-on-unknown-properties: false
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+  flyway:
+    locations: classpath:db.migration
+    enabled: true
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: "maximumSize=500, expireAfterAccess=120s"
+
+  thymeleaf:
+    mode: HTML
+
+  mail:
+    from: 'no-reply@bnuuywar.com'
+    host: 'mail.bnuuywar.com'
+    port: 465
+    username: 'no-reply@bnuuywar.com'
+    password: "${JWARSV_APP_EMAIL_PW:abc}"
+    properties:
+      mail:
+        debug: true
+        transport.protocol: smtp
+        smtp:
+          auth: false
+          starttls:
+            enable: true
+
+app:
+  backoffice:
+      allowed_users: "fgomes"
+      master_pw: "${JWARSV_APP_BACKOFFICE_MASTER_PW:''}"
+  migration:
+    retrieve_fb_user_when_contacts: "${JWARSV_APP_RETRIEVE_FB_USER_WHEN_CONTACTS:false}"
+    force_user_sync_in_creation: "${JWARSV_APP_FB_FORCE_USER_SYNC_IN_CREATION:true}"
+  finance:
+    cashin:
+      pix:
+        expiration_time_seconds: 600
+        fee:
+          default: 0.00
+    cashout:
+      pix:
+        fee:
+          default: 0.50
+  providers:
+    stripe:
+      account: "${JWARSV_APP_STRIPE_ACC:abc}"
+      private_key: "${JWARSV_APP_STRIPE_KEY:abc}"
+      api_version: "${JWARSV_APP_STRIPE_API_VERSION:2024-06-20}"
+      enviroment: "${JWARSV_APP_STRIPE_ENV:developer}"
+      webhooks:
+        subs:
+          secret: "${JWARSV_APP_STRIPE_WH_SUBS_SECRET:abc}"
+    stark_bank:
+      enviroment: "${JWARSV_APP_STARK_BANK_ENV:default}"
+      project_id: "${JWARSV_APP_STARK_PROJECT_ID:6286096908419072}"
+      center_id: "${JWARSV_APP_STARK_BANK_CENTER_ID:5760672340115456}"
+      private_key: "${JWARSV_APP_STARK_BANK_KEY:abc}"
+
+# ===================================================================
+# actuator
+# ===================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        #Verificar o uso de outros. Habilitado apenas o health
+        include: health,info
+  endpoint:
+    health:
+      #Habilitar seguranca apos implementacao
+      show-details: always
+  jmx:
+    exposure:
+      exclude: "*"
+# ===================================================================
+# Desabilitado o health check do config server.
+# ===================================================================
+health:
+  config:
+    enabled: false

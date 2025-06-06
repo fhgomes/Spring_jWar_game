@@ -1,0 +1,140 @@
+services:
+
+    postgres-jwarsv-db-prod:
+        image: postgres:16.4-alpine
+        container_name: jwarsv_db_pgsql
+        restart: always
+        networks:
+            - postgres-network
+        environment:
+            - POSTGRES_USER=${JWARSV_PG_ADMIN_USER:-jwarsvadm}
+            - POSTGRES_PASSWORD=${JWARSV_ENV_PG_ADMIN_PW:-jwarsvadm@123}
+            - JWARSV_DB_DEV_PASSWORD=${JWARSV_ENV_DEV_APP_DB_PW:-jwarsvdev@123}
+            - JWARSV_DB_PROD_PASSWORD=${JWARSV_ENV_PROD_APP_DB_PW:-jwarsvprod@456}
+        ports:
+            - "15432:5432"
+        volumes:
+            - ./postgresql/init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
+            - pg_db_volume:/var/lib/postgresql/data
+            - postgresql_logs_volume:/var/log/postgresql/:rw
+
+    jwarsv-backend-app-dev:
+        image: jwar-server:latest-dev
+        container_name: jwarsv_app_dev
+        restart: always
+        mem_limit: 1024m  # Memory limit
+        networks:
+            - postgres-network
+            - jwarsv-backend-network
+        environment:
+            - SPRING_PROFILES_ACTIVE=dev
+            - APP_HOME=/var/jwarsv-app
+            - JAVA_TOOL_OPTIONS=-Xms512m -Xmx1024m
+            - JWARSV_APP_DB_PORT=5432
+            - JWARSV_APP_DB_HOST=postgres-jwarsv-db-prod
+            - JWARSV_APP_DB_NAME=jwarsv_db_dev
+            - JWARSV_APP_DB_USER=${JWARSV_ENV_DEV_APP_DB_USER:-ujwarsvdev}
+            - JWARSV_APP_DB_PW=${JWARSV_ENV_DEV_APP_DB_PW:-jwarsvdev@123}
+            - JWARSV_APP_FB_KEY=${JWARSV_ENV_DEV_APP_FB_KEY}
+            - JWARSV_APP_STARK_BANK_ENV=${JWARSV_ENV_DEV_APP_STARK_BANK_ENV}
+            - JWARSV_APP_STARK_PROJECT_ID=${JWARSV_ENV_DEV_APP_STARK_PROJECT_ID}
+            - JWARSV_APP_STARK_BANK_CENTER_ID=${JWARSV_ENV_DEV_APP_STARK_BANK_CENTER_ID}
+            - JWARSV_APP_STARK_BANK_KEY=${JWARSV_ENV_DEV_APP_STARK_BANK_KEY}
+            - JWARSV_APP_STRIPE_ACC=${JWARSV_ENV_DEV_APP_STRIPE_ACC}
+            - JWARSV_APP_STRIPE_KEY=${JWARSV_ENV_DEV_APP_STRIPE_KEY}
+            - JWARSV_APP_STRIPE_WH_SUBS_SECRET=${JWARSV_ENV_DEV_APP_STRIPE_WH_SUBS_SECRET}
+            - JWARSV_APP_RETRIEVE_FB_USER_WHEN_CONTACTS=${JWARSV_ENV_DEV_APP_RETRIEVE_FB_USER_WHEN_CONTACTS}
+            - JWARSV_APP_FB_FORCE_USER_SYNC_IN_CREATION=${JWARSV_ENV_DEV_APP_FB_FORCE_USER_SYNC_IN_CREATION}
+            - JWARSV_APP_BACKOFFICE_MASTER_PW=${JWARSV_ENV_DEV_APP_BACKOFFICE_MASTER_PW}
+        ports:
+            - "8081:8081"
+        volumes:
+            - dev_logs_volume:/var/jwarsv-app/logs:rw
+
+    jwarsv-nginx-app-prod:
+        image: jwar-server:latest-prd
+        container_name: jwarsv_app_prod
+        restart: always
+        mem_limit: 2048m  # Memory limit
+        networks:
+            - postgres-network
+            - jwarsv-backend-network
+        environment:
+            - SPRING_PROFILES_ACTIVE=prod
+            - APP_HOME=/var/jwarsv-app
+            - JAVA_TOOL_OPTIONS=-Xms512m -Xmx2048m
+            - JWARSV_APP_DB_PORT=5432
+            - JWARSV_APP_DB_HOST=postgres-jwarsv-qd-prod
+            - JWARSV_APP_DB_NAME=jwarsv_db_prod
+            - JWARSV_APP_DB_USER=${JWARSV_ENV_PROD_APP_DB_USER:-ujwarsvprod}
+            - JWARSV_APP_DB_PW=${JWARSV_ENV_PROD_APP_DB_PW:-jwarsvprod@456}
+            - JWARSV_APP_FB_KEY=${JWARSV_ENV_PROD_APP_FB_KEY}
+            - JWARSV_APP_STARK_BANK_ENV=${JWARSV_ENV_PROD_APP_STARK_BANK_ENV}
+            - JWARSV_APP_STARK_PROJECT_ID=${JWARSV_ENV_PROD_APP_STARK_PROJECT_ID}
+            - JWARSV_APP_STARK_BANK_CENTER_ID=${JWARSV_ENV_PROD_APP_STARK_BANK_CENTER_ID}
+            - JWARSV_APP_STARK_BANK_KEY=${JWARSV_ENV_PROD_APP_STARK_BANK_KEY}
+            - JWARSV_APP_STRIPE_ACC=${JWARSV_ENV_PROD_APP_STRIPE_ACC}
+            - JWARSV_APP_STRIPE_KEY=${JWARSV_ENV_PROD_APP_STRIPE_KEY}
+            - JWARSV_APP_STRIPE_ENV=${JWARSV_ENV_PROD_APP_STRIPE_ENV}
+            - JWARSV_APP_STRIPE_WH_SUBS_SECRET=${JWARSV_ENV_PROD_APP_STRIPE_WH_SUBS_SECRET}
+            - JWARSV_APP_RETRIEVE_FB_USER_WHEN_CONTACTS=${JWARSV_ENV_PROD_APP_RETRIEVE_FB_USER_WHEN_CONTACTS}
+            - JWARSV_APP_FB_FORCE_USER_SYNC_IN_CREATION=${JWARSV_ENV_PROD_APP_FB_FORCE_USER_SYNC_IN_CREATION}
+            - JWARSV_APP_BACKOFFICE_MASTER_PW=${JWARSV_ENV_PROD_APP_BACKOFFICE_MASTER_PW}
+        ports:
+            - "8080:8080"
+        volumes:
+            - prod_logs_volume:/var/jwarsv-app/logs:rw
+
+    jwarsv-nginx-server:
+        image: nginx:1.27.0-alpine
+        container_name: jwarsv-nginx-server
+        mem_limit: 256m  # Memory limit
+        volumes:
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:rw
+            - ./nginx/ssl/cloudflaresigned.crt:/etc/nginx/ssl/cloudflaresigned.crt:r
+            - ./nginx/ssl/cloudflaresigned.key:/etc/nginx/ssl/cloudflaresigned.key:r
+            - nginx_logs_volume:/var/log/nginx:rw
+        ports:
+            #        - ${APP_PORT:32280}:80
+            - "80:80"
+            - "443:443"
+        networks:
+            - jwarsv-backend-network
+
+volumes:
+    pg_db_volume:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: /var/postgresql/jwarsv-data/
+    dev_logs_volume:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: /var/logs/jwarsv-dev
+    prod_logs_volume:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: /var/logs/jwarsv-prod
+    nginx_logs_volume:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: /var/logs/jwarsv-nginx
+    postgresql_logs_volume:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: /var/logs/jwarsv-postgresql
+
+networks:
+    postgres-network:
+        external: false
+        driver: bridge
+    jwarsv-backend-network:

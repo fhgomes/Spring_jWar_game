@@ -1,0 +1,75 @@
+plugins {
+    id "application"
+    id "java"
+    id "org.springframework.boot" version "${springBootPluginVersion}"
+	id "io.spring.dependency-management" version "${springDepManagementPluginVersion}"
+	id "org.hibernate.orm" version "${hibernateOrmPluginVersion}"
+    id "org.graalvm.buildtools.native" version "${graalvmBuildtoolsNativePluginVersion}"
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+dependencies {
+    implementation project(":jwarsv-core")
+
+//    developmentOnly "org.springframework.boot:spring-boot-devtools"
+//    developmentOnly "org.springframework.boot:spring-boot-docker-compose"
+
+
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+    implementation "org.springframework.boot:spring-boot-starter-data-rest"
+    implementation "org.springframework.boot:spring-boot-starter-mail"
+    implementation "org.springframework.boot:spring-boot-starter-quartz"
+    implementation "org.springframework.boot:spring-boot-starter-undertow"
+    implementation ("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: 'spring-boot-starter-tomcat'
+    }
+    implementation "io.micrometer:micrometer-tracing-bridge-brave"
+    implementation "io.sentry:sentry-spring-boot-starter-jakarta"
+    implementation "org.flywaydb:flyway-core:${flywayVersion}"
+    implementation "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
+    implementation "com.google.firebase:firebase-admin"
+	implementation("org.springframework.cloud:spring-cloud-starter-openfeign") {
+		exclude group: "commons-io", module: "commons-io"
+	}
+    implementation "org.springframework.modulith:spring-modulith-starter-core"
+    implementation "org.springframework.modulith:spring-modulith-starter-jpa"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jacksonDataType8Version}"
+
+    runtimeOnly "com.h2database:h2"
+    runtimeOnly "org.postgresql:postgresql:${postgreSqlVersion}"
+    runtimeOnly "io.micrometer:micrometer-registry-prometheus"
+    runtimeOnly "org.springframework.modulith:spring-modulith-actuator"
+    runtimeOnly "org.springframework.modulith:spring-modulith-observability"
+
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.modulith:spring-modulith-starter-test"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'jwarsv-sboot',
+                'Implamentation-Version': version
+    }
+}
+
+springBoot {
+    mainClass = 'br.com.bnuuy.jwar.server.JWarBackCoreApplication'
+    buildInfo()
+}
+
+bootRun {
+    bootRun.systemProperty 'spring.profiles.active', "${springProfile}"
+}
