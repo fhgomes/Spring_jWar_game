@@ -38,16 +38,13 @@ class ClassicGameDistCountriesTest {
 	@Spy
 	ClassicGamePlayer p6 = new ClassicGamePlayer("6g", "woken");
 
-	@Spy
-	ShufflerUtil shufflerUtil = new ShufflerUtil();
-
 	ClassicGameDist classicGameDist;
 	Map<Integer, ClassicGameCountry> countries;
 
 	@BeforeEach
 	void setUp() {
 		countries = new HashMap<>();
-		classicGameDist = new ClassicGameDist(shufflerUtil);
+		classicGameDist = new ClassicGameDist();
 		p1.setPlaySeq(1);
 		p2.setPlaySeq(2);
 		p3.setPlaySeq(3);

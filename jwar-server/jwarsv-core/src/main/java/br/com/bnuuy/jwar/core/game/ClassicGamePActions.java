@@ -1,21 +1,30 @@
 package br.com.bnuuy.jwar.core.game;
 
+import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.countryCanBeTarget;
+import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.countryHasAttackTroops;
+import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.isAttackPhase;
+import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.isCountryOwner;
+import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.isMyTurn;
+import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.playerHasAvailableTroopsToAdd;
+
 public class ClassicGamePActions {
 
 	private final ClassicGame classicGame;
-	private final ClassicGameValidator validator;
 
-	public ClassicGamePActions(ClassicGame classicGame, ClassicGameValidator validator) {
+	public ClassicGamePActions(ClassicGame classicGame) {
 		this.classicGame = classicGame;
-		this.validator = validator;
 	}
 
-	public void attack(int srcPlayer, int srcCountry, int tgtCountry) {
-		validator.isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
-		validator.isAttackPhase(classicGame.getTurnPhase());
-		validator.isCountryOwner(srcPlayer, classicGame.getCountry(srcCountry));
-		validator.countryHasAttackTroops(classicGame.getCountry(srcCountry));
-		validator.countryCanBeTarget(classicGame.getCountry(srcCountry), classicGame.getCountry(tgtCountry));
+	public void attack(int srcPlayer, int srcCountryId, int tgtCountryId) {
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		isAttackPhase(classicGame.getTurnPhase());
+
+		ClassicGameCountry srcCountry = classicGame.getCountry(srcCountryId);
+		isCountryOwner(srcPlayer, srcCountry);
+		countryHasAttackTroops(srcCountry);
+
+		ClassicGameCountry tgtCountry = classicGame.getCountry(tgtCountryId);
+		countryCanBeTarget(srcCountry, tgtCountry);
 
 		//verificar qtd dados ataque
 		//verificar qtd dados defesa
@@ -31,30 +40,30 @@ public class ClassicGamePActions {
 	}
 
 	public void endCurrentTurnAttackPhase(int srcPlayer) {
-		validator.isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
 		classicGame.endTurnAttackPhase();
 	}
 
 	public void endCurrentTurnAddPhase(int srcPlayer) {
-		validator.isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
 		classicGame.endTurnAddPhase();
 	}
 
 	public void endCurrentTurn(int srcPlayer) {
-		validator.isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
 
 		//check if win (some conditions are valid on end of turn
 		classicGame.turnToNextPlayer();
 	}
 
 	public void addTroops(int srcPlayer, int qtdTroops, int tgtCountry) {
-		validator.isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
 
 		ClassicGameCountry country = classicGame.getCountry(tgtCountry);
-		validator.isCountryOwner(srcPlayer, country);
+		isCountryOwner(srcPlayer, country);
 
 		ClassicGamePlayer player = classicGame.getPlayer(srcPlayer);
-		validator.playerHasAvailableTroopsToAdd(player, qtdTroops);
+		playerHasAvailableTroopsToAdd(player, qtdTroops);
 
 		player.deduceTroops(qtdTroops);
 		country.addTroops(qtdTroops);
@@ -63,13 +72,13 @@ public class ClassicGamePActions {
 	}
 
 	public void addContTroops(int srcPlayer, int qtdTroops, int tgtCountry) {
-		validator.isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
 		ClassicGameCountry country = classicGame.getCountry(tgtCountry);
-		validator.isCountryOwner(srcPlayer, country);
+		isCountryOwner(srcPlayer, country);
 
 		//validate continent troops available
 //		ClassicGamePlayer player = classicGame.getPlayer(srcPlayer);
-//		validator.validateOwnerAvailability(player, qtdTroops);
+//		validateOwnerAvailability(player, qtdTroops);
 
 		//deduce from continent
 //		player.deduceTroops(qtdTroops);

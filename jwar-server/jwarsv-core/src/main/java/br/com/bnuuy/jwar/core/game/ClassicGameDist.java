@@ -1,5 +1,8 @@
 package br.com.bnuuy.jwar.core.game;
 
+import static br.com.bnuuy.jwar.core.game.ShufflerUtil.shuffleColors;
+import static br.com.bnuuy.jwar.core.game.ShufflerUtil.shuffleCountries;
+import static br.com.bnuuy.jwar.core.game.ShufflerUtil.shufflePlayers;
 import static java.lang.String.format;
 
 import br.com.bnuuy.jwar.core.game.map.EClassicCountries;
@@ -24,14 +27,12 @@ public class ClassicGameDist {
 	private static final String PLAYER_COUNTRY=
 		"Player: [%s] has earned the country: [%s]";
 
-	final ShufflerUtil shufflerUtil;
 
-	public ClassicGameDist(ShufflerUtil shufflerUtil) {
-		this.shufflerUtil = shufflerUtil;
+	public ClassicGameDist() {
 	}
 
 	public void distributeSeq(Map<Integer, ClassicGamePlayer> gamePlayers, List<ClassicGamePlayer> players) {
-		List<ClassicGamePlayer> shufledPlayers = shufflerUtil.shufflePlayers(players);
+		List<ClassicGamePlayer> shufledPlayers = shufflePlayers(players);
 
 		for (int i = 0; i < shufledPlayers.size(); i++) {
 			int assignPlaySeq = i + 1;
@@ -44,7 +45,7 @@ public class ClassicGameDist {
 	}
 
 	public void distributeColors(List<ClassicGamePlayer> players) {
-		List<EGameColors> shuffledColors = shufflerUtil.shuffleColors();
+		List<EGameColors> shuffledColors = shuffleColors();
 
 		for (int i = 0; i < players.size(); i++) {
 			EGameColors assignColor = shuffledColors.get(i);
@@ -57,7 +58,7 @@ public class ClassicGameDist {
 	public void distributeCountries(Map<Integer, ClassicGameCountry> gameCountries, List<ClassicGamePlayer> players) {
 		List<ClassicGamePlayer> sortedPlayers = new ArrayList<>(players);
 		sortedPlayers.sort(Comparator.comparingInt(ClassicGamePlayer::getPlaySeq));
-		List<EClassicCountries> shuffledCountries = shufflerUtil.shuffleCountries();
+		List<EClassicCountries> shuffledCountries = shuffleCountries();
 
 		int distributed = 0;
 		int ip = sortedPlayers.size()-1;

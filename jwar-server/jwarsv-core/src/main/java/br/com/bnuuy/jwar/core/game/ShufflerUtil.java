@@ -8,19 +8,21 @@ import java.util.List;
 
 public class ShufflerUtil {
 
-	public List<EGameColors> shuffleColors() {
+	private ShufflerUtil() {}
+
+	public static List<EGameColors> shuffleColors() {
 		List<EGameColors> colors = new ArrayList<>(List.of(EGameColors.values()));
 		Collections.shuffle(colors);
 		return colors;
 	}
 
-	public List<ClassicGamePlayer> shufflePlayers(List<ClassicGamePlayer> players) {
+	public static List<ClassicGamePlayer> shufflePlayers(List<ClassicGamePlayer> players) {
 		List<ClassicGamePlayer> shuffled = new ArrayList<>(players);
 		Collections.shuffle(shuffled);
 		return shuffled;
 	}
 
-	public List<EClassicCountries> shuffleCountries() {
+	public static List<EClassicCountries> shuffleCountries() {
 		List<EClassicCountries> shuffled = new ArrayList<>(List.of(EClassicCountries.values()));
 		Collections.shuffle(shuffled);
 		return shuffled;

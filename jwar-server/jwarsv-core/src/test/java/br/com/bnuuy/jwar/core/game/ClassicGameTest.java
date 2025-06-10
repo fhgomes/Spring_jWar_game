@@ -41,8 +41,7 @@ class ClassicGameTest {
 	void setUp() {
 		ShufflerUtil shufflerUtil = new ShufflerUtil();
 		ClassicGameDist classicGameDist = new ClassicGameDist(shufflerUtil);
-		ClassicGameValidator classicGameValidator = new ClassicGameValidator();
-		classicGame = new ClassicGame(classicGameDist, classicGameValidator);
+		classicGame = new ClassicGame(classicGameDist);
 	}
 
 	@Test

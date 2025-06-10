@@ -3,6 +3,7 @@ package br.com.bnuuy.jwar.core.game;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ADD;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ATTACK;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_MOVE;
+import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.validatePlayersToStart;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +14,6 @@ import lombok.Setter;
 public class ClassicGame {
 
 	private final ClassicGameDist classicGameDist;
-	private final ClassicGameValidator validator;
 
 	private final Map<Integer, ClassicGamePlayer> players;
 	private final Map<Integer, ClassicGameCountry> countries;
@@ -42,7 +42,6 @@ public class ClassicGame {
 
 	public ClassicGame(ClassicGameDist classicGameDist, ClassicGameValidator validator) {
 		this.classicGameDist = classicGameDist;
-		this.validator = validator;
 		this.countries = new HashMap<>();
 		this.players = new HashMap<>();
 		this.continents = new HashMap<>();
@@ -53,7 +52,7 @@ public class ClassicGame {
 	}
 
 	public void startMatch(List<ClassicGamePlayer> lobbyPlayers) {
-		validator.validatePlayersToStart(lobbyPlayers);
+		validatePlayersToStart(lobbyPlayers);
 		classicGameDist.distributeSeq(players, lobbyPlayers);
 		classicGameDist.distributeColors(lobbyPlayers);
 		classicGameDist.distributeCountries(countries, lobbyPlayers);
