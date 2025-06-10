@@ -40,7 +40,7 @@ public class ClassicGame {
 	private int turnPhase;
 
 
-	public ClassicGame(ClassicGameDist classicGameDist, ClassicGameValidator validator) {
+	public ClassicGame(ClassicGameDist classicGameDist) {
 		this.classicGameDist = classicGameDist;
 		this.countries = new HashMap<>();
 		this.players = new HashMap<>();

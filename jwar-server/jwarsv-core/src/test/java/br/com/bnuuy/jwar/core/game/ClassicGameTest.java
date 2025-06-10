@@ -39,8 +39,7 @@ class ClassicGameTest {
 
 	@BeforeEach
 	void setUp() {
-		ShufflerUtil shufflerUtil = new ShufflerUtil();
-		ClassicGameDist classicGameDist = new ClassicGameDist(shufflerUtil);
+		ClassicGameDist classicGameDist = new ClassicGameDist();
 		classicGame = new ClassicGame(classicGameDist);
 	}
 

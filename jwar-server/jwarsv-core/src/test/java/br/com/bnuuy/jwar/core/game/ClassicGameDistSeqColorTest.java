@@ -37,15 +37,12 @@ class ClassicGameDistSeqColorTest {
 	@Spy
 	ClassicGamePlayer p6 = new ClassicGamePlayer("6g", "woken");
 
-	@Spy
-	ShufflerUtil shufflerUtil = new ShufflerUtil();
-
 	ClassicGameDist classicGameDist;
 	Map<Integer, ClassicGamePlayer> gamePlayers;
 
 	@BeforeEach
 	void setUp() {
-		classicGameDist = new ClassicGameDist(shufflerUtil);
+		classicGameDist = new ClassicGameDist();
 		gamePlayers = new HashMap<>();
 	}
 
