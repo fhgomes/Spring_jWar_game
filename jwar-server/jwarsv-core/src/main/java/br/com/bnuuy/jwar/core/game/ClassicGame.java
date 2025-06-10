@@ -53,7 +53,7 @@ public class ClassicGame {
 	}
 
 	public void startMatch(List<ClassicGamePlayer> lobbyPlayers) {
-		validator.validatePlayers(lobbyPlayers);
+		validator.validatePlayersToStart(lobbyPlayers);
 		classicGameDist.distributeSeq(players, lobbyPlayers);
 		classicGameDist.distributeColors(lobbyPlayers);
 		classicGameDist.distributeCountries(countries, lobbyPlayers);
