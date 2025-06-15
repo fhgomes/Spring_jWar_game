@@ -3,14 +3,23 @@ package br.com.bnuuy.jwar.core.game;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ADD;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ATTACK;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_MOVE;
-import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.validatePlayersToStart;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.validatePlayersToStart;
 
+import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
+import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ClassicGame {
 
 	private final ClassicGameDist classicGameDist;
@@ -19,6 +28,9 @@ public class ClassicGame {
 	private final Map<Integer, ClassicGameCountry> countries;
 	private final Map<Integer, ClassicGameContinent> continents;
 	private final Map<Integer, List<ClassicGameContinent>> continentOwners;
+
+	@Getter
+	private final UUID matchId;
 
 	@Getter
 	private int qtdPlayers;
@@ -49,6 +61,7 @@ public class ClassicGame {
 		this.firstRound = true;
 		this.secondRound = false;
 		this.turnPhase = TURN_PHASE_ADD;
+		this.matchId = UUID.randomUUID();
 	}
 
 	public void startMatch(List<ClassicGamePlayer> lobbyPlayers) {
@@ -113,5 +126,12 @@ public class ClassicGame {
 
 	public void endTurnAttackPhase() {
 		this.turnPhase = TURN_PHASE_MOVE;
+	}
+
+	public void attack(ClassicGameCountry srcCountry, ClassicGameCountry tgtCountry) {
+		AttackResultVO attackRes = ClassicGameAttacker.attack(srcCountry, tgtCountry);
+
+		log.info("Attack rolled: "+ Arrays.toString(attackRes.getAttackers()));
+		log.info("Defense rolled: "+ Arrays.toString(attackRes.getDefense()));
 	}
 }

@@ -1,12 +1,18 @@
 package br.com.bnuuy.jwar.core.game;
 
-import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.countryCanBeTarget;
-import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.countryHasAttackTroops;
-import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.isAttackPhase;
-import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.isCountryOwner;
-import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.isMyTurn;
-import static br.com.bnuuy.jwar.core.game.ClassicGameValidator.playerHasAvailableTroopsToAdd;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.countryCanBeTarget;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.countryHasAttackTroops;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isAttackPhase;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isCountryOwner;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isMyTurn;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.playerHasAvailableTroopsToAdd;
 
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
+import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ClassicGamePActions {
 
 	private final ClassicGame classicGame;
@@ -25,6 +31,10 @@ public class ClassicGamePActions {
 
 		ClassicGameCountry tgtCountry = classicGame.getCountry(tgtCountryId);
 		countryCanBeTarget(srcCountry, tgtCountry);
+
+		classicGame.attack(srcCountry, tgtCountry);
+		log.info("Attack rolled: "+ Arrays.toString(attackers));
+		log.info("Defense rolled: "+ Arrays.toString(attackers));
 
 		//verificar qtd dados ataque
 		//verificar qtd dados defesa

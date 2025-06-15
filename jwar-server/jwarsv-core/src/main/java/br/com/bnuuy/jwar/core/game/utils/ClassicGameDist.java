@@ -1,10 +1,13 @@
-package br.com.bnuuy.jwar.core.game;
+package br.com.bnuuy.jwar.core.game.utils;
 
-import static br.com.bnuuy.jwar.core.game.ShufflerUtil.shuffleColors;
-import static br.com.bnuuy.jwar.core.game.ShufflerUtil.shuffleCountries;
-import static br.com.bnuuy.jwar.core.game.ShufflerUtil.shufflePlayers;
+import static br.com.bnuuy.jwar.core.game.utils.ShufflerUtil.shuffleColors;
+import static br.com.bnuuy.jwar.core.game.utils.ShufflerUtil.shuffleCountries;
+import static br.com.bnuuy.jwar.core.game.utils.ShufflerUtil.shufflePlayers;
 import static java.lang.String.format;
 
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountries;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
 import java.util.ArrayList;
@@ -16,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ClassicGameDist {
 
-	private static final int MIN_TROOPS = 3;
+	private static final int MIN_ROUND_TROOPS = 3;
 
 	private static final String PLAYER_POSITION =
 		"Player: [%s] will play in position: [%s]";
@@ -89,8 +92,9 @@ public class ClassicGameDist {
 		player.addTroops(troopsNewRound);
 	}
 
+
 	public void distributeRoundTroops(ClassicGamePlayer player, List<ClassicGameContinent> classicGameContinents) {
-		int troopsNewRound = 3;
+		int troopsNewRound = MIN_ROUND_TROOPS;
 		if (player.getOwnedCountries().size() > 7) {
 			troopsNewRound = player.getOwnedCountries().size() /2;
 		}

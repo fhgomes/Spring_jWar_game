@@ -1,4 +1,4 @@
-package br.com.bnuuy.jwar.core.game;
+package br.com.bnuuy.jwar.core.game.utils;
 
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ADD;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ATTACK;
@@ -6,6 +6,8 @@ import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_MOVE;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.CountriesBordersUtil;
 import java.util.HashSet;
 import java.util.List;

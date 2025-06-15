@@ -1,6 +1,7 @@
 package br.com.bnuuy.jwar.core.game;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

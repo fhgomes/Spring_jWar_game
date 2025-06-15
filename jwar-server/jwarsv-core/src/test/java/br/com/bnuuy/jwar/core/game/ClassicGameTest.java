@@ -3,6 +3,8 @@ package br.com.bnuuy.jwar.core.game;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
+import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

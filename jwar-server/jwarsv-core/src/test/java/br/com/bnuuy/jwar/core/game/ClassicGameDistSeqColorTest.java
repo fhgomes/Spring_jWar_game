@@ -3,7 +3,9 @@ package br.com.bnuuy.jwar.core.game;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
+import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

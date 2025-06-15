@@ -1,4 +1,4 @@
-package br.com.bnuuy.jwar.core.game;
+package br.com.bnuuy.jwar.core.game.domain;
 
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
 import java.util.ArrayList;
