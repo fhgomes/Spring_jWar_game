@@ -3,7 +3,6 @@ package br.com.bnuuy.jwar.core.game;
 import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.utils.ShufflerUtil;
-import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

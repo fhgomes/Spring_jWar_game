@@ -7,13 +7,18 @@ import lombok.Getter;
 @Getter
 public class ClassicGameCountry {
 	private final EClassicCountries country;
-	private int troopsCount;
-	private int gamePlayerOwner;
+	private final ClassicGameContinent continent;
+	private ClassicGamePlayer owner;
 	private EGameColors playerColor;
+	private int troopsCount;
+	private int ownerCode;
 
-	public ClassicGameCountry(EClassicCountries country, int gamePlayerOwner, EGameColors playerColor) {
+	public ClassicGameCountry(EClassicCountries country, ClassicGameContinent continent,
+							  ClassicGamePlayer owner, EGameColors playerColor) {
 		this.country = country;
-		this.gamePlayerOwner = gamePlayerOwner;
+		this.continent = continent;
+		this.owner = owner;
+		this.ownerCode = owner.getPlaySeq();
 		this.playerColor = playerColor;
 		this.troopsCount = 1;
 	}
@@ -26,10 +31,10 @@ public class ClassicGameCountry {
 		this.troopsCount -= outTroops;
 	}
 
-	public void changeOwner(int gamePlayerOwner, EGameColors playerColor, int newTroops) {
-		this.gamePlayerOwner = gamePlayerOwner;
+	public void changeOwner(ClassicGamePlayer newOwner, EGameColors playerColor) {
+		this.owner.getOwnedCountries().remove(this);
+		this.owner = newOwner;
+		this.ownerCode = newOwner.getPlaySeq();
 		this.playerColor = playerColor;
-		//todo validate here
-		this.troopsCount = newTroops;
 	}
 }

@@ -31,7 +31,7 @@ public class ClassicGameValidator {
 	}
 
 	public static void isCountryOwner(int srcPlayer, ClassicGameCountry classicGameCountry) {
-		if (classicGameCountry.getGamePlayerOwner() != srcPlayer) {
+		if (classicGameCountry.getOwnerCode() != srcPlayer) {
 			throw new GameRulesException("Não é possível exercutar a ação, o país de origem não pertence a voce");
 		}
 	}
@@ -48,7 +48,7 @@ public class ClassicGameValidator {
 	}
 
 	public static void countryCanBeTarget(ClassicGameCountry src, ClassicGameCountry target) {
-		if (src.getGamePlayerOwner() == target.getGamePlayerOwner()) {
+		if (src.getOwnerCode() == target.getOwnerCode()) {
 			throw new GameRulesException("Não é possível atacar um país que te pertence");
 		}
 		if (!CountriesBordersUtil.hasBorder(src.getCountry(), target.getCountry())) {

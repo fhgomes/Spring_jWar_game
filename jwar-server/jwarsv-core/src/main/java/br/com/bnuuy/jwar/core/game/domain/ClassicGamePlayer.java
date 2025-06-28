@@ -13,7 +13,7 @@ public class ClassicGamePlayer {
 	private EGameColors color;
 	private int playSeq;
 	private int availableTroops;
-	private List<ClassicGameCountry> ownedCountries;
+	private final List<ClassicGameCountry> ownedCountries;
 
 
 	public ClassicGamePlayer(String userId, String nickName) {
@@ -36,6 +36,7 @@ public class ClassicGamePlayer {
 	}
 
 	public void earnCountry(ClassicGameCountry unassignedCountry) {
+		unassignedCountry.changeOwner(this, this.getColor());
 		this.ownedCountries.add(unassignedCountry);
 	}
 

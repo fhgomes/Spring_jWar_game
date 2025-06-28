@@ -10,7 +10,6 @@ import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,8 @@ public class ClassicGame {
 	private final Map<Integer, ClassicGameCountry> countries;
 	private final Map<Integer, ClassicGameContinent> continents;
 	private final Map<Integer, List<ClassicGameContinent>> continentOwners;
+
+	private ClassicGameAttackResProcessor attackResProcessor;
 
 	@Getter
 	private final UUID matchId;
@@ -68,7 +69,19 @@ public class ClassicGame {
 		validatePlayersToStart(lobbyPlayers);
 		classicGameDist.distributeSeq(players, lobbyPlayers);
 		classicGameDist.distributeColors(lobbyPlayers);
-		classicGameDist.distributeCountries(countries, lobbyPlayers);
+
+		// Initialize continents using the distributor
+		classicGameDist.initializeContinents(continents);
+
+		// Distribute countries to players with continent references
+		classicGameDist.distributeCountries(countries, continents, lobbyPlayers);
+
+		// Initialize continent ownership and continentOwners map
+		classicGameDist.initializeContinentOwners(continents, continentOwners);
+
+		// Initialize attack result processor
+		attackResProcessor = new ClassicGameAttackResProcessor(continentOwners);
+
 		qtdPlayers = lobbyPlayers.size();
 		currentPlayer = 1;
 
@@ -128,10 +141,12 @@ public class ClassicGame {
 		this.turnPhase = TURN_PHASE_MOVE;
 	}
 
-	public void attack(ClassicGameCountry srcCountry, ClassicGameCountry tgtCountry) {
+	public AttackResultVO attack(ClassicGameCountry srcCountry, ClassicGameCountry tgtCountry) {
 		AttackResultVO attackRes = ClassicGameAttacker.attack(srcCountry, tgtCountry);
 
-		log.info("Attack rolled: "+ Arrays.toString(attackRes.getAttackers()));
-		log.info("Defense rolled: "+ Arrays.toString(attackRes.getDefense()));
+		// Use the instance of attackResProcessor to process the attack result
+		attackResProcessor.process(attackRes, srcCountry, tgtCountry);
+
+		return attackRes;
 	}
 }

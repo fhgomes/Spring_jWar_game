@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
+import br.com.bnuuy.jwar.core.game.map.EClassicContinents;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountries;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
 import java.util.ArrayList;
@@ -58,7 +59,17 @@ public class ClassicGameDist {
 		}
 	}
 
-	public void distributeCountries(Map<Integer, ClassicGameCountry> gameCountries, List<ClassicGamePlayer> players) {
+	public void initializeContinents(Map<Integer, ClassicGameContinent> continents) {
+		// Initialize continents
+		for (EClassicContinents continentEnum : EClassicContinents.values()) {
+			ClassicGameContinent continent = new ClassicGameContinent(continentEnum);
+			continents.put(continentEnum.getCode(), continent);
+		}
+	}
+
+	public void distributeCountries(Map<Integer, ClassicGameCountry> gameCountries,
+									Map<Integer, ClassicGameContinent> continents,
+									List<ClassicGamePlayer> players) {
 		List<ClassicGamePlayer> sortedPlayers = new ArrayList<>(players);
 		sortedPlayers.sort(Comparator.comparingInt(ClassicGamePlayer::getPlaySeq));
 		List<EClassicCountries> shuffledCountries = shuffleCountries();
@@ -69,10 +80,21 @@ public class ClassicGameDist {
 		for (int ic = 0; ic < shuffledCountries.size(); ic++) {
 			EClassicCountries unassignedCountry = shuffledCountries.get(ic);
 			ClassicGamePlayer player = sortedPlayers.get(ip);
+
+			// Get the continent for this country
+			ClassicGameContinent continent = continents.get(unassignedCountry.getContinent().getCode());
+
+			// Create the country with its continent
 			ClassicGameCountry gameCountry =
-				new ClassicGameCountry(unassignedCountry, player.getPlaySeq(), player.getColor());
+				new ClassicGameCountry(unassignedCountry, continent, player, player.getColor());
+
+			// Add the country to the player and to the game's countries map
 			player.earnCountry(gameCountry);
 			gameCountries.put(gameCountry.getCountry().getCode(), gameCountry);
+
+			// Add the country to its continent
+			continent.addCountry(gameCountry);
+
 			distributed++;
 
 			log.info(format(PLAYER_COUNTRY, player.getNickName(), gameCountry.getCountry().getName()));
@@ -100,6 +122,29 @@ public class ClassicGameDist {
 		}
 		player.addTroops(troopsNewRound);
 		classicGameContinents.forEach(ClassicGameContinent::addRoundTroops);
+	}
+
+	/**
+	 * Initializes the continentOwners map based on the current continent ownership
+	 */
+	public void initializeContinentOwners(Map<Integer, ClassicGameContinent> continents,
+										 Map<Integer, List<ClassicGameContinent>> continentOwners) {
+		// Clear the map first
+		continentOwners.clear();
+
+		// Update continent ownership and track in continentOwners map
+		for (ClassicGameContinent continent : continents.values()) {
+			continent.updateOwnership();
+
+			// Update continentOwners map
+			int ownerCode = continent.getGamePlayerOwner();
+			if (ownerCode > 0) {
+				if (!continentOwners.containsKey(ownerCode)) {
+					continentOwners.put(ownerCode, new ArrayList<>());
+				}
+				continentOwners.get(ownerCode).add(continent);
+			}
+		}
 	}
 
 	private int getTroopsFirstRounds(int qtdPlayers) {

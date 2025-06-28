@@ -7,6 +7,7 @@ import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isCountryOw
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isMyTurn;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.playerHasAvailableTroopsToAdd;
 
+import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import java.util.Arrays;
@@ -32,9 +33,10 @@ public class ClassicGamePActions {
 		ClassicGameCountry tgtCountry = classicGame.getCountry(tgtCountryId);
 		countryCanBeTarget(srcCountry, tgtCountry);
 
-		classicGame.attack(srcCountry, tgtCountry);
-		log.info("Attack rolled: "+ Arrays.toString(attackers));
-		log.info("Defense rolled: "+ Arrays.toString(attackers));
+		AttackResultVO attackRes = classicGame.attack(srcCountry, tgtCountry);
+
+		log.info("Attack rolled: "+ Arrays.toString(attackRes.getAttackers()));
+		log.info("Defense rolled: "+ Arrays.toString(attackRes.getDefense()));
 
 		//verificar qtd dados ataque
 		//verificar qtd dados defesa
