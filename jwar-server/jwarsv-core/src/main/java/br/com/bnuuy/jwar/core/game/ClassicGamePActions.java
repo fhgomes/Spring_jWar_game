@@ -12,8 +12,7 @@ import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
 import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
-import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
-import br.com.bnuuy.jwar.core.game.utils.CardExchangeEvaluator;
+import br.com.bnuuy.jwar.core.game.utils.ExchangeCardsEvaluator;
 import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -108,32 +107,12 @@ public class ClassicGamePActions {
 		// Get the player
 		ClassicGamePlayer player = classicGame.getPlayer(srcPlayer);
 
-		// Validate country codes
-		if (countryCodes == null || countryCodes.size() < 3) {
-			throw new GameRulesException("Card exchange requires at least 3 cards");
-		}
-
-		// Get the cards to exchange
-		List<EClassicCountryCard> playerCards = player.getCards();
-		List<EClassicCountryCard> cardsToExchange = new java.util.ArrayList<>();
-
-		for (Integer countryCode : countryCodes) {
-			// Get the card for this country code
-			EClassicCountryCard card = EClassicCountryCard.getByCountryCode(countryCode);
-
-			// Check if the player has this card
-			if (!playerCards.contains(card)) {
-				throw new GameRulesException("Player does not have the card for country code: " + countryCode);
-			}
-
-			cardsToExchange.add(card);
-		}
-
 		// Validate the cards can be exchanged
-		CardExchangeEvaluator.validateExchange(cardsToExchange);
+		ExchangeCardsEvaluator.validateExchange(player, countryCodes);
 
-		// Process the exchange
-		classicGame.exchangeCards(player, cardsToExchange);
+		// Process the exchange and get the troops gained
+		int troopsGained = classicGame.exchangeCards(player, countryCodes);
+		log.info("Player {} exchanged cards for {} troops", player.getNickName(), troopsGained);
 
 		// TODO: send update to other players about the card exchange
 	}

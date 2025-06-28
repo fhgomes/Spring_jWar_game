@@ -12,10 +12,10 @@ import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
-import br.com.bnuuy.jwar.core.game.utils.CardExchangeEvaluator;
 import br.com.bnuuy.jwar.core.game.utils.CardExchangeState;
 import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
 import br.com.bnuuy.jwar.core.game.utils.EndGameEvaluator;
+import br.com.bnuuy.jwar.core.game.utils.ExchangeCardsEvaluator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +40,9 @@ public class ClassicGame {
 
 	// Objective cards and end game evaluation
 	private EndGameEvaluator endGameEvaluator;
+
+	// Card exchange evaluator
+	private ExchangeCardsEvaluator exchangeCardsEvaluator;
 
 	// Country cards deck
 	private final List<EClassicCountryCard> cardsDeck;
@@ -105,9 +108,11 @@ public class ClassicGame {
 		// Initialize the end game evaluator
 		endGameEvaluator = new EndGameEvaluator(continentOwners, playersByColor, players);
 
-
 		// Initialize and shuffle the country cards deck
 		classicGameDist.initializeRoundCardsDeck(cardsDeck);
+
+		// Initialize the card exchange evaluator
+		exchangeCardsEvaluator = new ExchangeCardsEvaluator(countries, cardsDeck, cardExchangeState);
 
 		// Initialize continents using the distributor
 		classicGameDist.initializeContinents(continents);
@@ -247,15 +252,12 @@ public class ClassicGame {
 	 * Processes a card exchange for the specified player.
 	 *
 	 * @param player the player exchanging cards
-	 * @param cardsToExchange the cards to exchange
+	 * @param cardsToExchange the card codes to exchange
 	 * @return the number of troops gained from the exchange
 	 */
-	public void exchangeCards(ClassicGamePlayer player, List<EClassicCountryCard> cardsToExchange) {
-		// Validate the exchange
-		CardExchangeEvaluator.validateExchange(cardsToExchange);
-
-		// Process the card exchange using the distributor
-		classicGameDist.processCardExchange(player, cardsToExchange, countries, cardsDeck, cardExchangeState);
+	public int exchangeCards(ClassicGamePlayer player, List<Integer> cardsToExchange) {
+		// Process the card exchange using the evaluator
+		return exchangeCardsEvaluator.processCardExchange(player, cardsToExchange);
 	}
 
 
