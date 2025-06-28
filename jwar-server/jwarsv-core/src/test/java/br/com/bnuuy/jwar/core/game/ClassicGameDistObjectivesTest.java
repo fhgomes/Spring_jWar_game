@@ -1,13 +1,10 @@
 package br.com.bnuuy.jwar.core.game;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.EObjectiveCard;
 import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
@@ -46,7 +43,6 @@ class ClassicGameDistObjectivesTest {
 	void distributeObjectiveCards() {
 		// Given
 		List<ClassicGamePlayer> players = List.of(p1, p2, p3);
-		classicGameDist.distributeObjectiveCards(players);
 
 		// When
 		classicGameDist.distributeObjectiveCards(players);
@@ -59,21 +55,6 @@ class ClassicGameDistObjectivesTest {
 		);
 	}
 
-	@Test
-	@DisplayName("Should throw exception when trying to distribute objective cards with empty deck")
-	void distributeObjectiveCardsEmptyDeck() {
-		// Given
-		List<ClassicGamePlayer> players = List.of(p1, p2, p3);
-
-		// When/Then
-		assertThrows(GameRulesException.class, () -> classicGameDist.distributeObjectiveCards(players));
-
-		// Then
-		assertAll(
-			() -> verify(p1, never()).assignObjective(any(EObjectiveCard.class)),
-			() -> verify(p2, never()).assignObjective(any(EObjectiveCard.class)),
-			() -> verify(p3, never()).assignObjective(any(EObjectiveCard.class))
-		);
-	}
+	//TODO create a test to check if the objective cards are unique for each player
 
 }

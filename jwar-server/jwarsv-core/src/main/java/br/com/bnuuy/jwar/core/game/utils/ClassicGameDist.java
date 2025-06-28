@@ -319,11 +319,9 @@ public class ClassicGameDist {
 
 		// Distribute one objective card to each player
 		for (ClassicGamePlayer player : players) {
-			if (!objectiveCardsDeck.isEmpty()) {
-				EObjectiveCard card = objectiveCardsDeck.remove(0);
-				player.assignObjective(card);
-				log.info(format(PLAYER_ASSIGNED_OBJECTIVE, player.getNickName(), card.getDescription()));
-			}
+			EObjectiveCard card = objectiveCardsDeck.remove(0);
+			player.assignObjective(card);
+			log.info(format(PLAYER_ASSIGNED_OBJECTIVE, player.getNickName(), card.getDescription()));
 		}
 	}
 
@@ -334,7 +332,7 @@ public class ClassicGameDist {
 	 */
 	private List<EObjectiveCard> initializeObjectiveCardsDeck() {
 		// Add all objective cards to the deck
-		List<EObjectiveCard> objectiveCardsDeck = Arrays.asList(EObjectiveCard.values());
+		List<EObjectiveCard> objectiveCardsDeck = new ArrayList<>(List.of(EObjectiveCard.values()));
 
 		// Shuffle the deck
 		Collections.shuffle(objectiveCardsDeck);
