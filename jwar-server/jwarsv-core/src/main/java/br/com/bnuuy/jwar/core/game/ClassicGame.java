@@ -101,7 +101,7 @@ public class ClassicGame {
 					firstRound = false;
 					secondRound = true;
 				}
-				if (firstRound) {
+				if (secondRound) {
 					secondRound = false;
 				}
 			}
