@@ -9,7 +9,10 @@ import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
+import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
 import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +32,14 @@ public class ClassicGame {
 	private final Map<Integer, List<ClassicGameContinent>> continentOwners;
 
 	private ClassicGameAttackResProcessor attackResProcessor;
+
+	// Country cards deck
+	private final List<EClassicCountryCard> cardsDeck;
+
+	// Flag to track if the current player has conquered a country during their turn
+	@Getter
+	@Setter
+	private boolean hasConqueredCountryThisTurn;
 
 	@Getter
 	private final UUID matchId;
@@ -59,6 +70,8 @@ public class ClassicGame {
 		this.players = new HashMap<>();
 		this.continents = new HashMap<>();
 		this.continentOwners = new HashMap<>();
+		this.cardsDeck = new ArrayList<>();
+		this.hasConqueredCountryThisTurn = false;
 		this.firstRound = true;
 		this.secondRound = false;
 		this.turnPhase = TURN_PHASE_ADD;
@@ -82,6 +95,9 @@ public class ClassicGame {
 		// Initialize attack result processor
 		attackResProcessor = new ClassicGameAttackResProcessor(continentOwners);
 
+		// Initialize and shuffle the country cards deck
+		classicGameDist.initializeAndShuffleCardsDeck(cardsDeck);
+
 		qtdPlayers = lobbyPlayers.size();
 		currentPlayer = 1;
 
@@ -91,6 +107,16 @@ public class ClassicGame {
 	}
 
 	public void turnToNextPlayer() {
+		// Check if the current player conquered a country during their turn
+		// If so, give them a card (unless they already have the maximum)
+		if (hasConqueredCountryThisTurn) {
+			ClassicGamePlayer currentPlayerObj = players.get(currentPlayer);
+			classicGameDist.drawCardForPlayer(cardsDeck, currentPlayerObj);
+
+			// Reset the flag for the next player
+			hasConqueredCountryThisTurn = false;
+		}
+
 		this.turnPhase = TURN_PHASE_ADD;
 		setNextPlayer();
 		if (firstRound || secondRound) {
@@ -110,7 +136,6 @@ public class ClassicGame {
 
 		classicGameDist.distributeRoundTroops(players.get(currentPlayer), continentOwners.get(currentPlayer));
 		//let all players know its next player turn
-
 	}
 
 	private void setNextPlayer() {
@@ -147,6 +172,12 @@ public class ClassicGame {
 		// Use the instance of attackResProcessor to process the attack result
 		attackResProcessor.process(attackRes, srcCountry, tgtCountry);
 
+		// If the attack resulted in a conquest, set the flag
+		if (attackRes.isConquered()) {
+			hasConqueredCountryThisTurn = true;
+		}
+
 		return attackRes;
 	}
+
 }

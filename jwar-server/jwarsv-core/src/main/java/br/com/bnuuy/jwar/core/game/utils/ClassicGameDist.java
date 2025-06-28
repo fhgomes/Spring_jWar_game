@@ -5,13 +5,17 @@ import static br.com.bnuuy.jwar.core.game.utils.ShufflerUtil.shuffleCountries;
 import static br.com.bnuuy.jwar.core.game.utils.ShufflerUtil.shufflePlayers;
 import static java.lang.String.format;
 
+import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
+
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.EClassicContinents;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountries;
+import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +32,20 @@ public class ClassicGameDist {
 	private static final String PLAYER_COLOR =
 		"Player: [%s] will play as color: [%s]";
 
-	private static final String PLAYER_COUNTRY=
+	private static final String PLAYER_COUNTRY =
 		"Player: [%s] has earned the country: [%s]";
+
+	private static final String CARDS_DECK_INITIALIZED =
+		"Country cards deck initialized and shuffled with [%d] cards";
+
+	private static final String CANNOT_DRAW_EMPTY_DECK =
+		"Cannot draw card: deck is empty";
+
+	private static final String CANNOT_DRAW_MAX_CARDS =
+		"Cannot draw card: player [%s] already has the maximum number of cards";
+
+	private static final String PLAYER_DREW_CARD =
+		"Player [%s] drew card for country [%s]";
 
 
 	public ClassicGameDist() {
@@ -164,5 +180,50 @@ public class ClassicGameDist {
 		return troopsNewRound;
 	}
 
+	/**
+	 * Initializes and shuffles the country cards deck.
+	 *
+	 * @param cardsDeck the deck to initialize and shuffle
+	 */
+	public void initializeAndShuffleCardsDeck(List<EClassicCountryCard> cardsDeck) {
+		// Clear the deck first
+		cardsDeck.clear();
 
+		// Add all country cards to the deck
+		for (EClassicCountryCard card : EClassicCountryCard.values()) {
+			cardsDeck.add(card);
+		}
+
+		// Shuffle the deck
+		Collections.shuffle(cardsDeck);
+
+		log.info(format(CARDS_DECK_INITIALIZED, cardsDeck.size()));
+	}
+
+	/**
+	 * Draws a card from the deck and gives it to the player.
+	 * If the deck is empty, it throws a GameRulesException.
+	 * If the player already has the maximum number of cards, it throws a GameRulesException.
+	 *
+	 * @param cardsDeck the deck to draw from
+	 * @param player the player to give the card to
+	 * @return the card that was drawn
+	 * @throws GameRulesException if the deck is empty or the player already has the maximum number of cards
+	 */
+	public EClassicCountryCard drawCardForPlayer(List<EClassicCountryCard> cardsDeck, ClassicGamePlayer player) {
+		if (cardsDeck.isEmpty()) {
+			log.info(format(CANNOT_DRAW_EMPTY_DECK));
+			throw new GameRulesException(CANNOT_DRAW_EMPTY_DECK);
+		}
+
+		if (player.hasMaxCards()) {
+			log.info(format(CANNOT_DRAW_MAX_CARDS, player.getNickName()));
+			throw new GameRulesException(format(CANNOT_DRAW_MAX_CARDS, player.getNickName()));
+		}
+
+		EClassicCountryCard card = cardsDeck.remove(0);
+		player.addCard(card);
+		log.info(format(PLAYER_DREW_CARD, player.getNickName(), card.getCountry().getName()));
+		return card;
+	}
 }
