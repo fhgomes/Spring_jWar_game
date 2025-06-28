@@ -4,16 +4,21 @@ import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ADD;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ATTACK;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_MOVE;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.validatePlayersToStart;
+import static java.lang.String.format;
 
 import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
+import br.com.bnuuy.jwar.core.game.map.EGameColors;
+import br.com.bnuuy.jwar.core.game.map.EObjectiveCard;
 import br.com.bnuuy.jwar.core.game.utils.CardExchangeEvaluator;
 import br.com.bnuuy.jwar.core.game.utils.CardExchangeState;
 import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
+import br.com.bnuuy.jwar.core.game.utils.EndGameEvaluator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +36,13 @@ public class ClassicGame {
 	private final Map<Integer, ClassicGameCountry> countries;
 	private final Map<Integer, ClassicGameContinent> continents;
 	private final Map<Integer, List<ClassicGameContinent>> continentOwners;
+	private final Map<EGameColors, ClassicGamePlayer> playersByColor;
 
 	private ClassicGameAttackResProcessor attackResProcessor;
+
+	// Objective cards and end game evaluation
+	private EndGameEvaluator endGameEvaluator;
+	private final List<EObjectiveCard> objectiveCardsDeck;
 
 	// Country cards deck
 	private final List<EClassicCountryCard> cardsDeck;
@@ -74,7 +84,9 @@ public class ClassicGame {
 		this.players = new HashMap<>();
 		this.continents = new HashMap<>();
 		this.continentOwners = new HashMap<>();
+		this.playersByColor = new HashMap<>();
 		this.cardsDeck = new ArrayList<>();
+		this.objectiveCardsDeck = new ArrayList<>();
 		this.hasConqueredCountryThisTurn = false;
 		this.cardExchangeState = new CardExchangeState();
 		this.firstRound = true;
@@ -106,6 +118,18 @@ public class ClassicGame {
 		// Reset card exchange count and prize
 		cardExchangeState.reset();
 
+		// Map players by color for objective evaluation
+		playersByColor.clear();
+		for (ClassicGamePlayer player : lobbyPlayers) {
+			playersByColor.put(player.getColor(), player);
+		}
+
+		// Initialize the end game evaluator
+		endGameEvaluator = new EndGameEvaluator(continentOwners, playersByColor, players);
+
+		// Initialize, shuffle, and distribute objective cards to players
+		classicGameDist.initializeAndDistributeObjectiveCards(objectiveCardsDeck, lobbyPlayers, endGameEvaluator);
+
 		qtdPlayers = lobbyPlayers.size();
 		currentPlayer = 1;
 
@@ -114,11 +138,22 @@ public class ClassicGame {
 		//let all players know its first player turn
 	}
 
+	/**
+	 * Advances the game to the next player's turn.
+	 */
 	public void turnToNextPlayer() {
+		// Check if the current player has won at the end of their turn
+		ClassicGamePlayer currentPlayerObj = players.get(currentPlayer);
+		if (endGameEvaluator.hasPlayerWon(currentPlayerObj)) {
+			log.info(format("Player [%s] has won the game by completing their objective at the end of their turn!",
+				currentPlayerObj.getNickName()));
+			// TODO: Handle game end
+			return;
+		}
+
 		// Check if the current player conquered a country during their turn
 		// If so, give them a card (unless they already have the maximum)
 		if (hasConqueredCountryThisTurn) {
-			ClassicGamePlayer currentPlayerObj = players.get(currentPlayer);
 			classicGameDist.drawCardForPlayer(cardsDeck, currentPlayerObj);
 
 			// Reset the flag for the next player
@@ -174,6 +209,13 @@ public class ClassicGame {
 		this.turnPhase = TURN_PHASE_MOVE;
 	}
 
+	/**
+	 * Processes an attack between two countries.
+	 *
+	 * @param srcCountry the attacking country
+	 * @param tgtCountry the defending country
+	 * @return the result of the attack
+	 */
 	public AttackResultVO attack(ClassicGameCountry srcCountry, ClassicGameCountry tgtCountry) {
 		AttackResultVO attackRes = ClassicGameAttacker.attack(srcCountry, tgtCountry);
 
@@ -183,6 +225,22 @@ public class ClassicGame {
 		// If the attack resulted in a conquest, set the flag
 		if (attackRes.isConquered()) {
 			hasConqueredCountryThisTurn = true;
+
+			// Check if the attacking player has won
+			ClassicGamePlayer attackingPlayer = srcCountry.getOwner();
+			if (endGameEvaluator.hasPlayerWon(attackingPlayer)) {
+				log.info(format("Player [%s] has won the game by completing their objective after conquering [%s]!",
+					attackingPlayer.getNickName(), tgtCountry.getCountry().getName()));
+				// TODO: Handle game end
+			}
+
+			// Check if the defending player has been eliminated
+			ClassicGamePlayer defendingPlayer = tgtCountry.getOwner();
+			if (defendingPlayer != null && defendingPlayer.getOwnedCountries().isEmpty()) {
+				log.info(format("Player [%s] has been eliminated from the game!",
+					defendingPlayer.getNickName()));
+				// TODO: Handle player elimination
+			}
 		}
 
 		return attackRes;
@@ -201,7 +259,7 @@ public class ClassicGame {
 
 		// Process the card exchange using the distributor
 		classicGameDist.processCardExchange(player, cardsToExchange, countries, cardsDeck, cardExchangeState);
-		cardExchangeState.incrementExchangeCount();
 	}
+
 
 }

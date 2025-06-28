@@ -15,6 +15,8 @@ import br.com.bnuuy.jwar.core.game.map.EClassicContinents;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountries;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
+import br.com.bnuuy.jwar.core.game.map.EObjectiveCard;
+import br.com.bnuuy.jwar.core.game.utils.EndGameEvaluator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -56,6 +58,15 @@ public class ClassicGameDist {
 
 	private static final String PLAYER_BONUS_TROOPS =
 		"Player [%s] received [%d] bonus troops for owning country [%s] from exchanged card";
+
+	private static final String OBJECTIVE_CARDS_INITIALIZED =
+		"Objective cards deck initialized and shuffled with [%d] cards";
+
+	private static final String CANNOT_DISTRIBUTE_OBJECTIVES =
+		"Cannot distribute objective cards: deck is empty";
+
+	private static final String PLAYER_ASSIGNED_OBJECTIVE =
+		"Player [%s] assigned objective: [%s]";
 
 
 	public ClassicGameDist() {
@@ -291,5 +302,68 @@ public class ClassicGameDist {
 
 		log.info(format(PLAYER_EXCHANGED_CARDS, player.getNickName(),
 			cardsToExchange.size(), cardExchangeState.getCurrentPrize(), cardExchangeState.getExchangeCount()));
+
+		cardExchangeState.incrementExchangeCount();
+	}
+
+	/**
+	 * Initializes and shuffles the objective cards deck.
+	 *
+	 * @param objectiveCardsDeck the deck to initialize and shuffle
+	 */
+	public void initializeAndShuffleObjectiveCardsDeck(List<EObjectiveCard> objectiveCardsDeck) {
+		// Clear the deck first
+		objectiveCardsDeck.clear();
+
+		// Add all objective cards to the deck
+		for (EObjectiveCard card : EObjectiveCard.values()) {
+			objectiveCardsDeck.add(card);
+		}
+
+		// Shuffle the deck
+		Collections.shuffle(objectiveCardsDeck);
+
+		log.info(format(OBJECTIVE_CARDS_INITIALIZED, objectiveCardsDeck.size()));
+	}
+
+	/**
+	 * Distributes objective cards to players.
+	 *
+	 * @param objectiveCardsDeck the deck to distribute from
+	 * @param players the players to distribute cards to
+	 * @param endGameEvaluator the evaluator to assign objectives to players
+	 */
+	public void distributeObjectiveCards(List<EObjectiveCard> objectiveCardsDeck, List<ClassicGamePlayer> players,
+										EndGameEvaluator endGameEvaluator) {
+		if (objectiveCardsDeck.isEmpty()) {
+			log.info(format(CANNOT_DISTRIBUTE_OBJECTIVES));
+			throw new GameRulesException(CANNOT_DISTRIBUTE_OBJECTIVES);
+		}
+
+		// Distribute one objective card to each player
+		for (ClassicGamePlayer player : players) {
+			if (!objectiveCardsDeck.isEmpty()) {
+				EObjectiveCard card = objectiveCardsDeck.remove(0);
+				endGameEvaluator.assignObjective(player.getPlaySeq(), card);
+				log.info(format(PLAYER_ASSIGNED_OBJECTIVE, player.getNickName(), card.getDescription()));
+			}
+		}
+	}
+
+	/**
+	 * Initializes, shuffles, and distributes objective cards to players.
+	 * This method combines initializeAndShuffleObjectiveCardsDeck and distributeObjectiveCards.
+	 *
+	 * @param objectiveCardsDeck the deck to initialize, shuffle, and distribute from
+	 * @param players the players to distribute cards to
+	 * @param endGameEvaluator the evaluator to assign objectives to players
+	 */
+	public void initializeAndDistributeObjectiveCards(List<EObjectiveCard> objectiveCardsDeck, List<ClassicGamePlayer> players,
+										EndGameEvaluator endGameEvaluator) {
+		// Initialize and shuffle the deck first
+		initializeAndShuffleObjectiveCardsDeck(objectiveCardsDeck);
+
+		// Then distribute the cards
+		distributeObjectiveCards(objectiveCardsDeck, players, endGameEvaluator);
 	}
 }
