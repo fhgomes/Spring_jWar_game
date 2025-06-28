@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
@@ -42,10 +43,12 @@ class ClassicGameDistCountriesTest {
 
 	ClassicGameDist classicGameDist;
 	Map<Integer, ClassicGameCountry> countries;
+	Map<Integer, ClassicGameContinent> continents;
 
 	@BeforeEach
 	void setUp() {
 		countries = new HashMap<>();
+		continents = new HashMap<>();
 		classicGameDist = new ClassicGameDist();
 		p1.setPlaySeq(1);
 		p2.setPlaySeq(2);
@@ -53,13 +56,16 @@ class ClassicGameDistCountriesTest {
 		p4.setPlaySeq(4);
 		p5.setPlaySeq(5);
 		p6.setPlaySeq(6);
+
+		// Initialize continents
+		classicGameDist.initializeContinents(continents);
 	}
 
 	@Test
 	@DisplayName("Should check all countries distributed by 3")
 	void distributeCountries3() {
 		List<ClassicGamePlayer> players = List.of(p1, p2, p3);
-		classicGameDist.distributeCountries(countries, players);
+		classicGameDist.distributeCountries(countries, continents, players);
 
 		assertAll(
 			() -> assertTrue(allUniqueCountries(players)),
@@ -73,7 +79,7 @@ class ClassicGameDistCountriesTest {
 	@DisplayName("Should check all countries distributed by 4")
 	void distributeCountries4() {
 		List<ClassicGamePlayer> players = List.of(p1, p2, p3, p4);
-		classicGameDist.distributeCountries(countries, players);
+		classicGameDist.distributeCountries(countries, continents, players);
 
 		assertAll(
 			() -> assertTrue(allUniqueCountries(players)),
@@ -88,7 +94,7 @@ class ClassicGameDistCountriesTest {
 	@DisplayName("Should check all countries distributed by 5")
 	void distributeCountries5() {
 		List<ClassicGamePlayer> players = List.of(p1, p2, p3, p4, p5);
-		classicGameDist.distributeCountries(countries, players);
+		classicGameDist.distributeCountries(countries, continents, players);
 
 		assertAll(
 			() -> assertTrue(allUniqueCountries(players)),
@@ -104,7 +110,7 @@ class ClassicGameDistCountriesTest {
 	@DisplayName("Should check all countries distributed by 5 check orders")
 	void distributeCountries5CheckInvertOrders() {
 		List<ClassicGamePlayer> players = List.of(p2, p5, p1, p4, p3);
-		classicGameDist.distributeCountries(countries, players);
+		classicGameDist.distributeCountries(countries, continents, players);
 
 		assertAll(
 			() -> assertTrue(allUniqueCountries(players)),
@@ -120,7 +126,7 @@ class ClassicGameDistCountriesTest {
 	@DisplayName("Should check all countries distributed by 6")
 	void distributeCountries6() {
 		List<ClassicGamePlayer> players = List.of(p1, p2, p3, p4, p5, p6);
-		classicGameDist.distributeCountries(countries, players);
+		classicGameDist.distributeCountries(countries, continents, players);
 
 		assertAll(
 			() -> assertTrue(allUniqueCountries(players)),

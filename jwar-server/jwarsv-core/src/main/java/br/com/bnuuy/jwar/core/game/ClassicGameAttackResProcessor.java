@@ -21,6 +21,11 @@ public class ClassicGameAttackResProcessor {
 		implyDmg(result, srcCountry, tgtCountry);
 		checkConquer(result, srcCountry, tgtCountry);
 
+		//TODO verificar player morreu
+			//TODO ganhou jogo? possibilidade de ganhar jogo por jogador derrotado
+		//TODO verificar se o jogador derrotado tinha cartas
+			//TODO GANHAR CARTAS do derrotado
+			//lembrar que n pode exceder o limite de cartas, só add até preencher o limite
 		return result;
 	}
 
@@ -29,10 +34,12 @@ public class ClassicGameAttackResProcessor {
 		if (result.isConquered()) {
 			// Change ownership of the country
 			tgtCountry.changeOwner(srcCountry.getOwner(), srcCountry.getPlayerColor());
+			//TODO ganhou jogo? possibilidade de ganhar jogo por qtde de países conquistados
 
 			// Update continent ownership
 			ClassicGameContinent continent = tgtCountry.getContinent();
-			continent.updateOwnership();
+			continent.checkAndUpdateOwnership();
+			//TODO ganhou jogo? possibilidade de ganhar jogo por continente conquistado
 
 			// Update continentOwners map
 			updateContinentOwnership(continent);

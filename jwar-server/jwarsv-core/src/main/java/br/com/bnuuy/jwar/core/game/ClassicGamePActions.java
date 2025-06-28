@@ -2,15 +2,20 @@ package br.com.bnuuy.jwar.core.game;
 
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.countryCanBeTarget;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.countryHasAttackTroops;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isAddPhase;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isAttackPhase;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isCountryOwner;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isMyTurn;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.playerHasAvailableTroopsToAdd;
 
+import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
 import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
+import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
+import br.com.bnuuy.jwar.core.game.utils.CardExchangeEvaluator;
 import java.util.Arrays;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -38,17 +43,6 @@ public class ClassicGamePActions {
 		log.info("Attack rolled: "+ Arrays.toString(attackRes.getAttackers()));
 		log.info("Defense rolled: "+ Arrays.toString(attackRes.getDefense()));
 
-		//verificar qtd dados ataque
-		//verificar qtd dados defesa
-		//rolar dados de ambos em paralelo, order por maiores
-		//comparar atack x defesa
-		//deduzir mortos ambos lados
-		//verificar conquista
-		//verificar conquista continente
-		//verificar perda de continente
-		//verificar player morreu
-			//ganhou jogo?
-			//passar cartas
 	}
 
 	public void endCurrentTurnAttackPhase(int srcPlayer) {
@@ -95,6 +89,53 @@ public class ClassicGamePActions {
 		//deduce from continent
 //		player.deduceTroops(qtdTroops);
 		country.addTroops(qtdTroops);
+	}
+
+	/**
+	 * Exchanges cards for troops during the add phase.
+	 * The player must have at least 3 cards, and they must form a valid combination
+	 * (3 of the same shape or 3 different shapes).
+	 *
+	 * @param srcPlayer the player exchanging cards
+	 * @param countryCodes the country codes of the cards to exchange
+	 * @throws GameRulesException if the exchange is invalid
+	 */
+	public void exchangeCards(int srcPlayer, List<Integer> countryCodes) {
+		// Validate it's the player's turn and the add phase
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		isAddPhase(classicGame.getTurnPhase());
+
+		// Get the player
+		ClassicGamePlayer player = classicGame.getPlayer(srcPlayer);
+
+		// Validate country codes
+		if (countryCodes == null || countryCodes.size() < 3) {
+			throw new GameRulesException("Card exchange requires at least 3 cards");
+		}
+
+		// Get the cards to exchange
+		List<EClassicCountryCard> playerCards = player.getCards();
+		List<EClassicCountryCard> cardsToExchange = new java.util.ArrayList<>();
+
+		for (Integer countryCode : countryCodes) {
+			// Get the card for this country code
+			EClassicCountryCard card = EClassicCountryCard.getByCountryCode(countryCode);
+
+			// Check if the player has this card
+			if (!playerCards.contains(card)) {
+				throw new GameRulesException("Player does not have the card for country code: " + countryCode);
+			}
+
+			cardsToExchange.add(card);
+		}
+
+		// Validate the cards can be exchanged
+		CardExchangeEvaluator.validateExchange(cardsToExchange);
+
+		// Process the exchange
+		classicGame.exchangeCards(player, cardsToExchange);
+
+		// TODO: send update to other players about the card exchange
 	}
 
 }

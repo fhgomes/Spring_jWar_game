@@ -49,7 +49,7 @@ public class ClassicGameContinent {
 			.allMatch(country -> country.getOwnerCode() == playerCode);
 	}
 
-	public void updateOwnership() {
+	public void checkAndUpdateOwnership() {
 		if (!countries.isEmpty() && countries.get(0).getOwner() != null) {
 			int ownerCode = countries.get(0).getOwnerCode();
 			if (checkOwnership(ownerCode)) {

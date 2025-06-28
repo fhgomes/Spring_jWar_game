@@ -7,6 +7,7 @@ import static java.lang.String.format;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
 
+import br.com.bnuuy.jwar.core.game.ClassicGameConstants;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
@@ -42,10 +43,19 @@ public class ClassicGameDist {
 		"Cannot draw card: deck is empty";
 
 	private static final String CANNOT_DRAW_MAX_CARDS =
-		"Cannot draw card: player [%s] already has the maximum number of cards";
+		"[Ignored] Cannot draw card: player [%s] already has the maximum number of cards";
 
 	private static final String PLAYER_DREW_CARD =
 		"Player [%s] drew card for country [%s]";
+
+	private static final String CARDS_RETURNED_TO_DECK =
+		"Returned [%d] cards to the deck and shuffled.";
+
+	private static final String PLAYER_EXCHANGED_CARDS =
+		"Player [%s] exchanged [%d] cards for [%d] troops (exchange #[%d]).";
+
+	private static final String PLAYER_BONUS_TROOPS =
+		"Player [%s] received [%d] bonus troops for owning country [%s] from exchanged card";
 
 
 	public ClassicGameDist() {
@@ -150,7 +160,7 @@ public class ClassicGameDist {
 
 		// Update continent ownership and track in continentOwners map
 		for (ClassicGameContinent continent : continents.values()) {
-			continent.updateOwnership();
+			continent.checkAndUpdateOwnership();
 
 			// Update continentOwners map
 			int ownerCode = continent.getGamePlayerOwner();
@@ -207,10 +217,9 @@ public class ClassicGameDist {
 	 *
 	 * @param cardsDeck the deck to draw from
 	 * @param player the player to give the card to
-	 * @return the card that was drawn
 	 * @throws GameRulesException if the deck is empty or the player already has the maximum number of cards
 	 */
-	public EClassicCountryCard drawCardForPlayer(List<EClassicCountryCard> cardsDeck, ClassicGamePlayer player) {
+	public void drawCardForPlayer(List<EClassicCountryCard> cardsDeck, ClassicGamePlayer player) {
 		if (cardsDeck.isEmpty()) {
 			log.info(format(CANNOT_DRAW_EMPTY_DECK));
 			throw new GameRulesException(CANNOT_DRAW_EMPTY_DECK);
@@ -218,12 +227,69 @@ public class ClassicGameDist {
 
 		if (player.hasMaxCards()) {
 			log.info(format(CANNOT_DRAW_MAX_CARDS, player.getNickName()));
-			throw new GameRulesException(format(CANNOT_DRAW_MAX_CARDS, player.getNickName()));
+			return;
 		}
 
 		EClassicCountryCard card = cardsDeck.remove(0);
 		player.addCard(card);
+
+		// Update the player's canExchangeCards flag
+		boolean canExchange = CardExchangeEvaluator.canPlayerExchangeCards(player.getCards());
+		player.updateCanExchangeCards(canExchange);
+
 		log.info(format(PLAYER_DREW_CARD, player.getNickName(), card.getCountry().getName()));
-		return card;
+	}
+
+	/**
+	 * Returns the specified cards to the deck and shuffles the deck.
+	 *
+	 * @param cardsDeck the deck to return the cards to
+	 * @param cards the cards to return to the deck
+	 */
+	public void returnCardsToDeckAndShuffle(List<EClassicCountryCard> cardsDeck, List<EClassicCountryCard> cards) {
+		if (cards != null && !cards.isEmpty()) {
+			cardsDeck.addAll(cards);
+			Collections.shuffle(cardsDeck);
+			log.info(format(CARDS_RETURNED_TO_DECK, cards.size()));
+		}
+	}
+
+	/**
+	 * Processes a card exchange for the specified player.
+	 * Adds bonus troops for countries owned by the player and removes the cards from the player's hand.
+	 *
+	 * @param player the player exchanging cards
+	 * @param cardsToExchange the cards to exchange
+	 * @param countries the map of countries in the game
+	 * @param cardsDeck the deck to return the cards to
+	 * @param cardExchangeState the number of card exchanges and current exchange prize so far
+	 */
+	public void processCardExchange(ClassicGamePlayer player, List<EClassicCountryCard> cardsToExchange,
+									Map<Integer, ClassicGameCountry> countries, List<EClassicCountryCard> cardsDeck,
+									CardExchangeState cardExchangeState) {
+		// Add troops to the player
+		player.addTroops(cardExchangeState.getCurrentPrize());
+
+		// Add bonus troops for countries owned by the player
+		for (EClassicCountryCard card : cardsToExchange) {
+			EClassicCountries cardCountry = card.getCountry();
+			ClassicGameCountry gameCountry = countries.get(cardCountry.getCode());
+
+			// If the player owns the country on the card, add bonus troops to that country
+			if (gameCountry != null && gameCountry.getOwner() == player) {
+				gameCountry.addTroops(ClassicGameConstants.COUNTRY_BONUS_TROOPS);
+				log.info(format(PLAYER_BONUS_TROOPS, player.getNickName(),
+					ClassicGameConstants.COUNTRY_BONUS_TROOPS, gameCountry.getCountry().getName()));
+			}
+		}
+
+		// Remove the cards from the player's hand
+		player.removeExchangedCards(cardsToExchange);
+
+		// Return the cards to the deck and shuffle
+		returnCardsToDeckAndShuffle(cardsDeck, cardsToExchange);
+
+		log.info(format(PLAYER_EXCHANGED_CARDS, player.getNickName(),
+			cardsToExchange.size(), cardExchangeState.getCurrentPrize(), cardExchangeState.getExchangeCount()));
 	}
 }

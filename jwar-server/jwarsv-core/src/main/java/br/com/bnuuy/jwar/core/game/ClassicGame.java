@@ -10,9 +10,10 @@ import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
+import br.com.bnuuy.jwar.core.game.utils.CardExchangeEvaluator;
+import br.com.bnuuy.jwar.core.game.utils.CardExchangeState;
 import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,9 @@ public class ClassicGame {
 	@Getter
 	@Setter
 	private boolean hasConqueredCountryThisTurn;
+
+	@Getter
+	private final CardExchangeState cardExchangeState;
 
 	@Getter
 	private final UUID matchId;
@@ -72,6 +76,7 @@ public class ClassicGame {
 		this.continentOwners = new HashMap<>();
 		this.cardsDeck = new ArrayList<>();
 		this.hasConqueredCountryThisTurn = false;
+		this.cardExchangeState = new CardExchangeState();
 		this.firstRound = true;
 		this.secondRound = false;
 		this.turnPhase = TURN_PHASE_ADD;
@@ -97,6 +102,9 @@ public class ClassicGame {
 
 		// Initialize and shuffle the country cards deck
 		classicGameDist.initializeAndShuffleCardsDeck(cardsDeck);
+
+		// Reset card exchange count and prize
+		cardExchangeState.reset();
 
 		qtdPlayers = lobbyPlayers.size();
 		currentPlayer = 1;
@@ -178,6 +186,22 @@ public class ClassicGame {
 		}
 
 		return attackRes;
+	}
+
+	/**
+	 * Processes a card exchange for the specified player.
+	 *
+	 * @param player the player exchanging cards
+	 * @param cardsToExchange the cards to exchange
+	 * @return the number of troops gained from the exchange
+	 */
+	public void exchangeCards(ClassicGamePlayer player, List<EClassicCountryCard> cardsToExchange) {
+		// Validate the exchange
+		CardExchangeEvaluator.validateExchange(cardsToExchange);
+
+		// Process the card exchange using the distributor
+		classicGameDist.processCardExchange(player, cardsToExchange, countries, cardsDeck, cardExchangeState);
+		cardExchangeState.incrementExchangeCount();
 	}
 
 }

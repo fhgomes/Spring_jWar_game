@@ -85,7 +85,7 @@ class ClassicGameDistSeqColorTest {
 	@DisplayName("Should check all colors distributed by 3")
 	void distributeColors3() {
 		List<ClassicGamePlayer> players = List.of(p1, p2, p3);
-		classicGameDist.distributeSeq(gamePlayers, players);
+		classicGameDist.distributeColors(players);
 
 		assertAll(
 			() -> assertTrue(allUniqueColor(players))
@@ -96,7 +96,7 @@ class ClassicGameDistSeqColorTest {
 	@DisplayName("Should check all colors distributed by 6")
 	void distributeColors6() {
 		List<ClassicGamePlayer> players = List.of(p1, p2, p3, p4, p5, p6);
-		classicGameDist.distributeSeq(gamePlayers, players);
+		classicGameDist.distributeColors(players);
 
 		assertAll(
 			() -> assertTrue(allUniqueColor(players))

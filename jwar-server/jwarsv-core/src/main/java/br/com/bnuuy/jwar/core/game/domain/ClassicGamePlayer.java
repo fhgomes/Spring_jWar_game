@@ -6,6 +6,7 @@ import br.com.bnuuy.jwar.core.game.map.EGameColors;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class ClassicGamePlayer {
@@ -18,6 +19,9 @@ public class ClassicGamePlayer {
 	private final List<ClassicGameCountry> ownedCountries;
 	private final List<EClassicCountryCard> cards;
 
+	@Setter
+	private boolean canExchangeCards;
+
 
 	public ClassicGamePlayer(String userId, String nickName) {
 		this.userId = userId;
@@ -25,6 +29,7 @@ public class ClassicGamePlayer {
 		this.availableTroops = 0;
 		this.ownedCountries = new ArrayList<>();
 		this.cards = new ArrayList<>();
+		this.canExchangeCards = false;
 	}
 
 	public void setPlaySeq(int playSeq) {
@@ -82,5 +87,32 @@ public class ClassicGamePlayer {
 	 */
 	public int getCardCount() {
 		return cards.size();
+	}
+
+	/**
+	 * Updates the canExchangeCards flag with the given value.
+	 *
+	 * @param canExchange the new value for canExchangeCards
+	 * @return the new value of canExchangeCards
+	 */
+	public void updateCanExchangeCards(boolean canExchange) {
+		this.canExchangeCards = canExchange;
+	}
+
+	/**
+	 * Removes the specified cards from the player's hand.
+	 *
+	 * @param cardsToRemove the cards to remove
+	 * @return true if all cards were removed successfully, false otherwise
+	 */
+	public void removeExchangedCards(List<EClassicCountryCard> cardsToRemove) {
+		if (cardsToRemove == null || cardsToRemove.isEmpty()) {
+			return;
+		}
+
+		cards.removeAll(cardsToRemove);
+
+		// Update the canExchangeCards flag after removing cards
+		canExchangeCards = false;
 	}
 }
