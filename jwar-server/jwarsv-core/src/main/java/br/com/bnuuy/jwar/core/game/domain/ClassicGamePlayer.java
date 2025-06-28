@@ -3,6 +3,7 @@ package br.com.bnuuy.jwar.core.game.domain;
 import br.com.bnuuy.jwar.core.game.ClassicGameConstants;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
+import br.com.bnuuy.jwar.core.game.map.EObjectiveCard;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -18,6 +19,7 @@ public class ClassicGamePlayer {
 	private int availableTroops;
 	private final List<ClassicGameCountry> ownedCountries;
 	private final List<EClassicCountryCard> cards;
+	private EObjectiveCard gameObjective;
 
 	@Setter
 	private boolean canExchangeCards;
@@ -30,6 +32,10 @@ public class ClassicGamePlayer {
 		this.ownedCountries = new ArrayList<>();
 		this.cards = new ArrayList<>();
 		this.canExchangeCards = false;
+	}
+
+	public void assignObjective(EObjectiveCard gameObjective) {
+		this.gameObjective = gameObjective;
 	}
 
 	public void setPlaySeq(int playSeq) {

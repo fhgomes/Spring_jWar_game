@@ -12,13 +12,11 @@ import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
-import br.com.bnuuy.jwar.core.game.map.EObjectiveCard;
 import br.com.bnuuy.jwar.core.game.utils.CardExchangeEvaluator;
 import br.com.bnuuy.jwar.core.game.utils.CardExchangeState;
 import br.com.bnuuy.jwar.core.game.utils.ClassicGameDist;
 import br.com.bnuuy.jwar.core.game.utils.EndGameEvaluator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +40,6 @@ public class ClassicGame {
 
 	// Objective cards and end game evaluation
 	private EndGameEvaluator endGameEvaluator;
-	private final List<EObjectiveCard> objectiveCardsDeck;
 
 	// Country cards deck
 	private final List<EClassicCountryCard> cardsDeck;
@@ -86,7 +83,6 @@ public class ClassicGame {
 		this.continentOwners = new HashMap<>();
 		this.playersByColor = new HashMap<>();
 		this.cardsDeck = new ArrayList<>();
-		this.objectiveCardsDeck = new ArrayList<>();
 		this.hasConqueredCountryThisTurn = false;
 		this.cardExchangeState = new CardExchangeState();
 		this.firstRound = true;
@@ -97,11 +93,35 @@ public class ClassicGame {
 
 	public void startMatch(List<ClassicGamePlayer> lobbyPlayers) {
 		validatePlayersToStart(lobbyPlayers);
-		classicGameDist.distributeSeq(players, lobbyPlayers);
-		classicGameDist.distributeColors(lobbyPlayers);
+
+		qtdPlayers = lobbyPlayers.size();
+
+		// Reset card exchange count and prize
+		cardExchangeState.reset();
+
+		// Initialize attack result processor
+		attackResProcessor = new ClassicGameAttackResProcessor(continentOwners);
+
+		// Initialize the end game evaluator
+		endGameEvaluator = new EndGameEvaluator(continentOwners, playersByColor, players);
+
+
+		// Initialize and shuffle the country cards deck
+		classicGameDist.initializeRoundCardsDeck(cardsDeck);
 
 		// Initialize continents using the distributor
 		classicGameDist.initializeContinents(continents);
+
+		classicGameDist.distributeSeq(players, lobbyPlayers);
+		classicGameDist.distributeColors(lobbyPlayers);
+		// Map players by color for objective evaluation
+		playersByColor.clear();
+		for (ClassicGamePlayer player : lobbyPlayers) {
+			playersByColor.put(player.getColor(), player);
+		}
+
+		// Initialize, shuffle, and distribute objective cards to players
+		classicGameDist.distributeObjectiveCards(lobbyPlayers);
 
 		// Distribute countries to players with continent references
 		classicGameDist.distributeCountries(countries, continents, lobbyPlayers);
@@ -109,30 +129,7 @@ public class ClassicGame {
 		// Initialize continent ownership and continentOwners map
 		classicGameDist.initializeContinentOwners(continents, continentOwners);
 
-		// Initialize attack result processor
-		attackResProcessor = new ClassicGameAttackResProcessor(continentOwners);
-
-		// Initialize and shuffle the country cards deck
-		classicGameDist.initializeAndShuffleCardsDeck(cardsDeck);
-
-		// Reset card exchange count and prize
-		cardExchangeState.reset();
-
-		// Map players by color for objective evaluation
-		playersByColor.clear();
-		for (ClassicGamePlayer player : lobbyPlayers) {
-			playersByColor.put(player.getColor(), player);
-		}
-
-		// Initialize the end game evaluator
-		endGameEvaluator = new EndGameEvaluator(continentOwners, playersByColor, players);
-
-		// Initialize, shuffle, and distribute objective cards to players
-		classicGameDist.initializeAndDistributeObjectiveCards(objectiveCardsDeck, lobbyPlayers, endGameEvaluator);
-
-		qtdPlayers = lobbyPlayers.size();
 		currentPlayer = 1;
-
 		turnToNextPlayer();
 		//send update to all players
 		//let all players know its first player turn

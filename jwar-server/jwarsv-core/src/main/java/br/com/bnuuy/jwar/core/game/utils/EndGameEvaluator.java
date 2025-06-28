@@ -9,7 +9,6 @@ import br.com.bnuuy.jwar.core.game.utils.objective.ContinentObjectiveEvaluator;
 import br.com.bnuuy.jwar.core.game.utils.objective.DestroyPlayerObjectiveEvaluator;
 import br.com.bnuuy.jwar.core.game.utils.objective.ObjectiveEvaluator;
 import br.com.bnuuy.jwar.core.game.utils.objective.TerritoryObjectiveEvaluator;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +19,6 @@ import java.util.Map;
 public class EndGameEvaluator {
 
     private final Map<EObjectiveType, ObjectiveEvaluator> evaluators;
-    private final Map<Integer, EObjectiveCard> playerObjectives;
 
     /**
      * Creates a new EndGameEvaluator.
@@ -35,7 +33,6 @@ public class EndGameEvaluator {
             Map<Integer, ClassicGamePlayer> playersById) {
 
         this.evaluators = new HashMap<>();
-        this.playerObjectives = new HashMap<>();
 
         // Initialize the evaluators
         evaluators.put(EObjectiveType.CONQUER_TERRITORIES, new TerritoryObjectiveEvaluator());
@@ -46,23 +43,13 @@ public class EndGameEvaluator {
     }
 
     /**
-     * Assigns an objective to a player.
-     *
-     * @param playerId the player ID
-     * @param objective the objective
-     */
-    public void assignObjective(int playerId, EObjectiveCard objective) {
-        playerObjectives.put(playerId, objective);
-    }
-
-    /**
      * Checks if a player has completed their objective.
      *
      * @param player the player to check
      * @return true if the player has completed their objective, false otherwise
      */
     public boolean hasPlayerWon(ClassicGamePlayer player) {
-        EObjectiveCard objective = playerObjectives.get(player.getPlaySeq());
+        EObjectiveCard objective = player.getGameObjective();
         if (objective == null) {
             return false;
         }
@@ -73,15 +60,5 @@ public class EndGameEvaluator {
         }
 
         return evaluator.hasCompletedObjective(player, objective);
-    }
-
-    /**
-     * Gets a player's objective.
-     *
-     * @param playerId the player ID
-     * @return the player's objective, or null if the player doesn't have an objective
-     */
-    public EObjectiveCard getPlayerObjective(int playerId) {
-        return playerObjectives.get(playerId);
     }
 }

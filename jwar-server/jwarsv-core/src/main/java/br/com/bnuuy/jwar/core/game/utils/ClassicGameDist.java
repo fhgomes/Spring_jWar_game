@@ -6,7 +6,6 @@ import static br.com.bnuuy.jwar.core.game.utils.ShufflerUtil.shufflePlayers;
 import static java.lang.String.format;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
-
 import br.com.bnuuy.jwar.core.game.ClassicGameConstants;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
@@ -16,8 +15,8 @@ import br.com.bnuuy.jwar.core.game.map.EClassicCountries;
 import br.com.bnuuy.jwar.core.game.map.EClassicCountryCard;
 import br.com.bnuuy.jwar.core.game.map.EGameColors;
 import br.com.bnuuy.jwar.core.game.map.EObjectiveCard;
-import br.com.bnuuy.jwar.core.game.utils.EndGameEvaluator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -206,14 +205,12 @@ public class ClassicGameDist {
 	 *
 	 * @param cardsDeck the deck to initialize and shuffle
 	 */
-	public void initializeAndShuffleCardsDeck(List<EClassicCountryCard> cardsDeck) {
+	public void initializeRoundCardsDeck(List<EClassicCountryCard> cardsDeck) {
 		// Clear the deck first
 		cardsDeck.clear();
 
 		// Add all country cards to the deck
-		for (EClassicCountryCard card : EClassicCountryCard.values()) {
-			cardsDeck.add(card);
-		}
+		cardsDeck.addAll(Arrays.asList(EClassicCountryCard.values()));
 
 		// Shuffle the deck
 		Collections.shuffle(cardsDeck);
@@ -307,34 +304,14 @@ public class ClassicGameDist {
 	}
 
 	/**
-	 * Initializes and shuffles the objective cards deck.
+	 * Initializes, shuffles, and distributes objective cards to players.
+	 * This method combines initializeAndShuffleObjectiveCardsDeck and distributeObjectiveCards.
 	 *
-	 * @param objectiveCardsDeck the deck to initialize and shuffle
-	 */
-	public void initializeAndShuffleObjectiveCardsDeck(List<EObjectiveCard> objectiveCardsDeck) {
-		// Clear the deck first
-		objectiveCardsDeck.clear();
-
-		// Add all objective cards to the deck
-		for (EObjectiveCard card : EObjectiveCard.values()) {
-			objectiveCardsDeck.add(card);
-		}
-
-		// Shuffle the deck
-		Collections.shuffle(objectiveCardsDeck);
-
-		log.info(format(OBJECTIVE_CARDS_INITIALIZED, objectiveCardsDeck.size()));
-	}
-
-	/**
-	 * Distributes objective cards to players.
-	 *
-	 * @param objectiveCardsDeck the deck to distribute from
 	 * @param players the players to distribute cards to
-	 * @param endGameEvaluator the evaluator to assign objectives to players
 	 */
-	public void distributeObjectiveCards(List<EObjectiveCard> objectiveCardsDeck, List<ClassicGamePlayer> players,
-										EndGameEvaluator endGameEvaluator) {
+	public void distributeObjectiveCards(List<ClassicGamePlayer> players) {
+		List<EObjectiveCard> objectiveCardsDeck = initializeObjectiveCardsDeck();
+
 		if (objectiveCardsDeck.isEmpty()) {
 			log.info(format(CANNOT_DISTRIBUTE_OBJECTIVES));
 			throw new GameRulesException(CANNOT_DISTRIBUTE_OBJECTIVES);
@@ -344,26 +321,24 @@ public class ClassicGameDist {
 		for (ClassicGamePlayer player : players) {
 			if (!objectiveCardsDeck.isEmpty()) {
 				EObjectiveCard card = objectiveCardsDeck.remove(0);
-				endGameEvaluator.assignObjective(player.getPlaySeq(), card);
+				player.assignObjective(card);
 				log.info(format(PLAYER_ASSIGNED_OBJECTIVE, player.getNickName(), card.getDescription()));
 			}
 		}
 	}
 
 	/**
-	 * Initializes, shuffles, and distributes objective cards to players.
-	 * This method combines initializeAndShuffleObjectiveCardsDeck and distributeObjectiveCards.
+	 * Initializes and shuffles the objective cards deck.
 	 *
-	 * @param objectiveCardsDeck the deck to initialize, shuffle, and distribute from
-	 * @param players the players to distribute cards to
-	 * @param endGameEvaluator the evaluator to assign objectives to players
+	 * @return objectiveCardsDeck the deck initialized and shuffled
 	 */
-	public void initializeAndDistributeObjectiveCards(List<EObjectiveCard> objectiveCardsDeck, List<ClassicGamePlayer> players,
-										EndGameEvaluator endGameEvaluator) {
-		// Initialize and shuffle the deck first
-		initializeAndShuffleObjectiveCardsDeck(objectiveCardsDeck);
+	private List<EObjectiveCard> initializeObjectiveCardsDeck() {
+		// Add all objective cards to the deck
+		List<EObjectiveCard> objectiveCardsDeck = Arrays.asList(EObjectiveCard.values());
 
-		// Then distribute the cards
-		distributeObjectiveCards(objectiveCardsDeck, players, endGameEvaluator);
+		// Shuffle the deck
+		Collections.shuffle(objectiveCardsDeck);
+
+		return objectiveCardsDeck;
 	}
 }
