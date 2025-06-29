@@ -17,13 +17,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ClassicGameAttackResProcessor {
 
+	private static final String PLAYER_HAS_BEEN_ELIMINATED = "Player [%s] has been eliminated from the game!";
+	private static final String PLAYER_WON_THE_GAME_ELIMINATING_PLAYER =
+		"Player [%s] has won the game by eliminating player [%s]!";
+	private static final String TRANSFER_CARDS_FROM_ELIMINATED_PLAYER =
+		"Transferring [%d] cards from player [%s] to player [%s]";
+	private static final String TRANSFER_CARD_COUNTRY_TO_WON_PLAYER = "Transferred card for country [%s] to player [%s]";
+	private static final String RETURN_REMAINING_CARDS_TO_DECK = "Returning [%d] remaining cards to the deck";
+	private static final String PLAYER_WON_BY_CONQUERING_COUNTRIES =
+		"Player [%s] has won the game by conquering country [%s]!";
+	private static final String PLAYER_WON_BY_CONQUERING_CONTINENT =
+		"Player [%s] has won the game by conquering continent [%s]!";
+
 	private final Map<Integer, List<ClassicGameContinent>> continentOwners;
 	private final EndGameEvaluator endGameEvaluator;
 	private final List<EClassicCountryCard> cardsDeck;
 
 	public ClassicGameAttackResProcessor(Map<Integer, List<ClassicGameContinent>> continentOwners,
-										EndGameEvaluator endGameEvaluator,
-										List<EClassicCountryCard> cardsDeck) {
+										 EndGameEvaluator endGameEvaluator,
+										 List<EClassicCountryCard> cardsDeck) {
 		this.continentOwners = continentOwners;
 		this.endGameEvaluator = endGameEvaluator;
 		this.cardsDeck = cardsDeck;
@@ -38,12 +50,12 @@ public class ClassicGameAttackResProcessor {
 		ClassicGamePlayer attackingPlayer = srcCountry.getOwner();
 
 		if (result.isConquered() && defendingPlayer.getOwnedCountries().isEmpty()) {
-			log.info(format("Player [%s] has been eliminated from the game!", defendingPlayer.getNickName()));
+			log.info(format(PLAYER_HAS_BEEN_ELIMINATED, defendingPlayer.getNickName()));
 			result.setPlayerDestroyed(true);
 			// Transfer cards from the defeated player to the attacking player
 			transferCardsFromDefeatedPlayer(defendingPlayer, attackingPlayer);
 
-			checkObjectiveAchievedEndGame(attackingPlayer, "Player [%s] has won the game by eliminating player [%s]!",
+			checkObjectiveAchievedEndGame(attackingPlayer, PLAYER_WON_THE_GAME_ELIMINATING_PLAYER,
 				defendingPlayer.getNickName());
 		}
 
@@ -74,7 +86,7 @@ public class ClassicGameAttackResProcessor {
 			return;
 		}
 
-		log.info(format("Transferring [%d] cards from player [%s] to player [%s]",
+		log.info(format(TRANSFER_CARDS_FROM_ELIMINATED_PLAYER,
 			defeatedPlayerCards.size(), defeatedPlayer.getNickName(), attackingPlayer.getNickName()));
 
 		// Calculate how many cards the attacking player can receive
@@ -86,13 +98,13 @@ public class ClassicGameAttackResProcessor {
 			EClassicCountryCard card = defeatedPlayerCards.get(0);
 			attackingPlayer.addCard(card);
 			defeatedPlayerCards.remove(0);
-			log.info(format("Transferred card for country [%s] to player [%s]",
+			log.info(format(TRANSFER_CARD_COUNTRY_TO_WON_PLAYER,
 				card.getCountry().getName(), attackingPlayer.getNickName()));
 		}
 
 		// Return any remaining cards to the deck
 		if (!defeatedPlayerCards.isEmpty()) {
-			log.info(format("Returning [%d] remaining cards to the deck", defeatedPlayerCards.size()));
+			log.info(format(RETURN_REMAINING_CARDS_TO_DECK, defeatedPlayerCards.size()));
 			cardsDeck.addAll(defeatedPlayerCards);
 			defeatedPlayerCards.clear();
 		}
@@ -103,7 +115,7 @@ public class ClassicGameAttackResProcessor {
 	}
 
 	private void checkConquer(AttackResultVO result, ClassicGameCountry srcCountry,
-									 ClassicGameCountry tgtCountry) {
+							  ClassicGameCountry tgtCountry) {
 		if (result.isConquered()) {
 			ClassicGamePlayer attackingPlayer = srcCountry.getOwner();
 
@@ -112,7 +124,7 @@ public class ClassicGameAttackResProcessor {
 
 			// Check if the player has won the game by conquering countries
 			if (endGameEvaluator.hasPlayerWon(attackingPlayer)) {
-				log.info(format("Player [%s] has won the game by conquering country [%s]!",
+				log.info(format(PLAYER_WON_BY_CONQUERING_COUNTRIES,
 					attackingPlayer.getNickName(), tgtCountry.getCountry().getName()));
 				return;
 			}
@@ -125,12 +137,12 @@ public class ClassicGameAttackResProcessor {
 			updateContinentOwnership(continent);
 
 			// Check if the player has won the game by conquering a continent
-			checkObjectiveAchievedEndGame(attackingPlayer, "Player [%s] has won the game by conquering continent [%s]!",
+			checkObjectiveAchievedEndGame(attackingPlayer, PLAYER_WON_BY_CONQUERING_CONTINENT,
 				continent.getContinent().getName());
 		}
 	}
 
-	private static void implyDmg(AttackResultVO result, ClassicGameCountry srcCountry, ClassicGameCountry tgtCountry) {
+	private void implyDmg(AttackResultVO result, ClassicGameCountry srcCountry, ClassicGameCountry tgtCountry) {
 		srcCountry.removeTroops(result.getSrcCountry());
 		tgtCountry.removeTroops(result.getTargetCountryLoss());
 		if (tgtCountry.getTroopsCount() < 1) {
