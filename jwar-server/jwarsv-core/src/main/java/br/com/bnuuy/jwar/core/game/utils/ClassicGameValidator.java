@@ -6,6 +6,7 @@ import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_MOVE;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.map.CountriesBordersUtil;
@@ -13,6 +14,9 @@ import java.util.HashSet;
 import java.util.List;
 
 public class ClassicGameValidator {
+
+	private static final String NOT_ENOUGH_TROOPS_IN_CONTINENT = "Not enough troops available in continent to add";
+
 
 	private ClassicGameValidator() {}
 
@@ -39,6 +43,12 @@ public class ClassicGameValidator {
 	public static void playerHasAvailableTroopsToAdd(ClassicGamePlayer player, int qtdTroops) {
 		if (player.getAvailableTroops() < qtdTroops)
 			throw new GameRulesException("Não é possível adicionar tropas, excede o limite disponível");
+	}
+	public static void continentHasAvailableTroopsToAdd(ClassicGameContinent continent, int qtdTroops) {
+
+		if (qtdTroops > continent.getAvailableTroopsCount()) {
+			throw new GameRulesException(NOT_ENOUGH_TROOPS_IN_CONTINENT);
+		}
 	}
 
 	public static void isMyTurn(int srcPlayer, int currentPlayer) {

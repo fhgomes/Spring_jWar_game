@@ -1,5 +1,6 @@
 package br.com.bnuuy.jwar.core.game;
 
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.continentHasAvailableTroopsToAdd;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.countryCanBeTarget;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.countryHasAttackTroops;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isAddPhase;
@@ -11,6 +12,7 @@ import static java.lang.String.format;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
 import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
 import br.com.bnuuy.jwar.core.game.utils.ExchangeCardsEvaluator;
@@ -74,21 +76,21 @@ public class ClassicGamePActions {
 		player.deduceTroops(qtdTroops);
 		country.addTroops(qtdTroops);
 
-		//send update to other players country update, player update
+		//TODO SPRINT2 - COMNS - send update to other players country update, player update
 	}
 
-	public void addContTroops(int srcPlayer, int qtdTroops, int tgtCountry) {
+	public void addContinentTroops(int srcPlayer, int qtdTroops, int tgtCountry) {
 		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
 		ClassicGameCountry country = classicGame.getCountry(tgtCountry);
 		isCountryOwner(srcPlayer, country);
 
-		//validate continent troops available
-//		ClassicGamePlayer player = classicGame.getPlayer(srcPlayer);
-//		validateOwnerAvailability(player, qtdTroops);
+		ClassicGameContinent continent = country.getContinent();
+		continentHasAvailableTroopsToAdd(continent, qtdTroops);
 
-		//deduce from continent
-//		player.deduceTroops(qtdTroops);
+		continent.deduceTroops(qtdTroops);
 		country.addTroops(qtdTroops);
+
+		//TODO SPRINT2 - COMNS - send update to other players country update, player update
 	}
 
 	/**
@@ -115,7 +117,7 @@ public class ClassicGamePActions {
 		int troopsGained = classicGame.exchangeCards(player, countryCodes);
 		log.info(format("Player [%s] exchanged cards for [%d] troops", player.getNickName(), troopsGained));
 
-		// TODO: send update to other players about the card exchange
+		///TODO SPRINT2 - COMNS - send update to other players about the card exchange
 	}
 
 }
