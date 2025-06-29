@@ -102,14 +102,14 @@ public class ClassicGame {
 		// Reset card exchange count and prize
 		cardExchangeState.reset();
 
-		// Initialize attack result processor
-		attackResProcessor = new ClassicGameAttackResProcessor(continentOwners);
+		// Initialize and shuffle the country cards deck
+		classicGameDist.initializeRoundCardsDeck(cardsDeck);
 
 		// Initialize the end game evaluator
 		endGameEvaluator = new EndGameEvaluator(continentOwners, playersByColor, players);
 
-		// Initialize and shuffle the country cards deck
-		classicGameDist.initializeRoundCardsDeck(cardsDeck);
+		// Initialize attack result processor
+		attackResProcessor = new ClassicGameAttackResProcessor(continentOwners, endGameEvaluator, cardsDeck);
 
 		// Initialize the card exchange evaluator
 		exchangeCardsEvaluator = new ExchangeCardsEvaluator(countries, cardsDeck, cardExchangeState);
@@ -236,13 +236,7 @@ public class ClassicGame {
 				// TODO: Handle game end
 			}
 
-			// Check if the defending player has been eliminated
-			ClassicGamePlayer defendingPlayer = tgtCountry.getOwner();
-			if (defendingPlayer != null && defendingPlayer.getOwnedCountries().isEmpty()) {
-				log.info(format("Player [%s] has been eliminated from the game!",
-					defendingPlayer.getNickName()));
-				// TODO: Handle player elimination
-			}
+
 		}
 
 		return attackRes;

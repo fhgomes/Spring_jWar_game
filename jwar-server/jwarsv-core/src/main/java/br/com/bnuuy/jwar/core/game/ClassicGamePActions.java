@@ -7,6 +7,7 @@ import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isAttackPha
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isCountryOwner;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isMyTurn;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.playerHasAvailableTroopsToAdd;
+import static java.lang.String.format;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
 import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
@@ -112,7 +113,7 @@ public class ClassicGamePActions {
 
 		// Process the exchange and get the troops gained
 		int troopsGained = classicGame.exchangeCards(player, countryCodes);
-		log.info("Player {} exchanged cards for {} troops", player.getNickName(), troopsGained);
+		log.info(format("Player [%s] exchanged cards for [%d] troops", player.getNickName(), troopsGained));
 
 		// TODO: send update to other players about the card exchange
 	}
