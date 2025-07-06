@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class JWarBackCoreApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(JWarBackCoreApplication.class, args);
+		SpringApplication.run(br.com.bnuuy.jwar.core.JWarBackCoreApplication.class, args);
 	}
 
 }
