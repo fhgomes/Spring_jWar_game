@@ -16,7 +16,6 @@ import { ActionFeed } from '@/components/game/ActionFeed';
 import { AttackModal } from '@/components/game/AttackModal';
 import { MoveTroopsControls } from '@/components/game/MoveTroopsControls';
 import { EndGameModal } from '@/components/game/EndGameModal';
-import { TERRITORY_BY_CODE } from '@/components/game/map-data';
 import type {
   AttackResultDto,
   CountrySnapshot,
@@ -290,5 +289,3 @@ export default function MatchPage() {
   );
 }
 
-// Re-export to silence "unused" warning for TERRITORY_BY_CODE if not used in this file.
-export const _territoryByCode = TERRITORY_BY_CODE;

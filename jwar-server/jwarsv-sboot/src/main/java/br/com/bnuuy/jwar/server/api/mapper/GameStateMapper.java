@@ -64,13 +64,15 @@ public class GameStateMapper {
         }
 
         List<CountrySnapshot> countrySnapshots = new ArrayList<>();
+        java.util.Set<Integer> seenCodes = new java.util.HashSet<>();
         for (EClassicCountries country : EClassicCountries.values()) {
+            if (!seenCodes.add(country.getCode())) continue;
             ClassicGameCountry c = game.getCountry(country.getCode());
             if (c == null) continue;
             UUID ownerUserId = playerSeqToUserId.get(c.getOwnerCode());
             countrySnapshots.add(new CountrySnapshot(
                 country.getCode(),
-                country.getName(),
+                c.getCountry() != null ? c.getCountry().getName() : country.getName(),
                 country.getContinent().getCode(),
                 ownerUserId,
                 c.getTroopsCount()

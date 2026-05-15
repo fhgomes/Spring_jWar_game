@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, type ComponentType } from 'react';
 import { Circle, Triangle, Square, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,7 @@ interface Props {
   countries: CountrySnapshot[];
 }
 
-const SHAPE_ICONS: Record<CardSnapshot['shape'], React.ComponentType<{ className?: string }>> = {
+const SHAPE_ICONS: Record<CardSnapshot['shape'], ComponentType<{ className?: string }>> = {
   CIRCLE: Circle,
   TRIANGLE: Triangle,
   SQUARE: Square,

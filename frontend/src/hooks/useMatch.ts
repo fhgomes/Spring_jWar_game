@@ -4,11 +4,11 @@ import { apiClient } from '@/lib/api';
 import { createStompClient } from '@/lib/stomp';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
-  ActionLogEntry,
   GameEvent,
   GameStateSnapshot,
   MatchFinishedPayload,
 } from '@/types/api';
+import type { ActionLogEntry } from '@/types/game';
 
 /**
  * Subscribes to the match snapshot and applies STOMP patches.

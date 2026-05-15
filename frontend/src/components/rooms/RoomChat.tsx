@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, Send, User } from 'lucide-react';
@@ -71,7 +71,7 @@ export function RoomChat({ roomId }: Props) {
     setText('');
   };
 
-  const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       send();

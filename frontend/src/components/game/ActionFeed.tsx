@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp, History } from 'lucide-react';
 import { cn, formatRelative } from '@/lib/utils';
-import type { ActionLogEntry } from '@/types/api';
+import type { ActionLogEntry } from '@/types/game';
 
 interface Props {
   entries: ActionLogEntry[];

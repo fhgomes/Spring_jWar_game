@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useToastStore, type ToastVariant } from '@/stores/useToastStore';
 import { cn } from '@/lib/utils';
 import { CheckCircle, AlertTriangle, XCircle, Info, X } from 'lucide-react';
@@ -9,7 +10,7 @@ const VARIANT_CLASSES: Record<ToastVariant, string> = {
   error: 'border-red-600 bg-red-950/90',
 };
 
-const ICONS: Record<ToastVariant, JSX.Element> = {
+const ICONS: Record<ToastVariant, ReactNode> = {
   info: <Info className="h-5 w-5 text-blue-400" aria-hidden="true" />,
   success: <CheckCircle className="h-5 w-5 text-green-400" aria-hidden="true" />,
   warning: <AlertTriangle className="h-5 w-5 text-yellow-400" aria-hidden="true" />,

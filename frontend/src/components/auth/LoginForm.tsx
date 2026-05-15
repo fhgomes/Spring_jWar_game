@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
@@ -137,7 +137,7 @@ function ForgotPasswordModal({ open, onClose, defaultEmail }: ForgotProps) {
   const [loading, setLoading] = useState(false);
   const toast = useToastStore((s) => s.push);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {

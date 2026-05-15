@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { ARMY_COLOR_HEX } from '@/types/game';
-import type { GamePhase, GameStateSnapshot, PlayerSnapshot } from '@/types/api';
+import type { GameStateSnapshot, PlayerSnapshot } from '@/types/api';
 
 interface Props {
   snapshot: GameStateSnapshot;
@@ -92,8 +92,4 @@ export function phaseHasTodo(snapshot: GameStateSnapshot): string | null {
     return `Posicione os exércitos restantes (${snapshot.troopsToDeploy})`;
   }
   return null;
-}
-
-export function _phaseTypeNarrow(p: GamePhase): GamePhase {
-  return p;
 }
