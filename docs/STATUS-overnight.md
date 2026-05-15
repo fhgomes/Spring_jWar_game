@@ -118,15 +118,46 @@ Integration tests with Testcontainers require a running Docker daemon (not avail
 
 ## Open items / known limitations
 
+### Infrastructure
 | Item | Severity | Where |
 |---|---|---|
 | Firebase service account JSON not provided | Required for Google OAuth + real auth | `secrets/firebase-service-account.json` (gitignored). For dev profile, `StubFirebaseAuthService` accepts `dev:<uid>` tokens. |
-| Frontend `npm install` not run | Required for Vite build | Run `cd frontend && npm install` |
+| Frontend `npm install` not run | Required for Vite build | Run `cd frontend && npm install` then `npm run typecheck && npm run lint` |
 | E2E `npm install` not run | Required for Playwright | Run `cd e2e && npm install && npx playwright install` |
-| Board SVG uses placeholder territory positions | Visual only — map renders but coordinates not geographically tuned | `frontend/src/components/game/map-data.ts` — viewBox 1600×900, polygons stubbed |
-| Mechanics P2/P3 not fully implemented | Lower priority items from spec 002 | Jokers in `EClassicCountryCard`, 5-card forced exchange, +2 owned-territory bonus, max(3, floor(N/2)) reinforcement formula, data typos (OTW/ALA dupe, ASI continent name, NVG self-loop, SWD/MOS English) |
 | Integration tests need Docker daemon | Will pass in CI | `e2e/`, `jwarsv-sboot/src/test/integration/` |
-| HEALTHCHECK targets `/api/health` | Works only after spec 003 controllers are wired in. They are now. | `Dockerfile` |
+
+### Backend gaps (X1 follow-ups)
+| Item | Severity | Where |
+|---|---|---|
+| `ClassicGamePActions.attack(...)` returns `void` | High | `MatchService.attack` rebuilds best-effort `AttackResultDto` from before/after snapshots; the actual dice arrays are lost. Need to refactor core to return `AttackResultVO` from the action. |
+| Bucket4j on classpath but not wired | Medium | `application.yml` has `app.rate-limit.*` config; the filter implementation needs a `HandlerInterceptor` with a `BucketRegistry`. |
+| `/api/auth/login` permit-all entry has no controller | Low (intentional) | Login is fully client-side via Firebase Web SDK + custom token exchange; entry is in `SecurityConfig` to avoid 401 redirects. |
+| Replay buffer / disconnect resilience (Spec 006 P3) | Low | `GameEventPublisher` is the single chokepoint where a future `SessionRegistry` can intercept. |
+
+### Frontend gaps (X2 follow-ups)
+| Item | Severity | Where |
+|---|---|---|
+| **Map polygons are schematic** — mechanically generated octagons grouped by continent, not geographically faithful | Visual polish | `frontend/src/components/game/map-data.ts` — replace `pathD` for richer art |
+| **Adjacency permissive on UI** — every non-owned territory shows as attack target | Correctness | `frontend/src/pages/MatchPage.tsx`. Backend should ship `adjacency` or `validTargets` in `CountrySnapshot`; UI swaps the filter then. |
+| **MOVE_AFTER_CONQUEST flow not auto-opened** — after conquest, no follow-up modal asks how many troops to move in | Functionality | `AttackModal` → chain into `MoveTroopsControls` with `minMove = attackerDice` when `result.conquered === true` |
+| **Forced exchange (5-card rule) not auto-triggered on UI** | Functionality | Spec 010 FR-018: when `myCards.length >= 5`, auto-open exchange modal with best legal selection pre-highlighted |
+| **Card shape mismatch** — frontend type includes `'JOKER'`, backend `ECardShape` enum has only `TRIANGLE/CIRCLE/SQUARE` | Contract | Align: either backend adds `JOKER` to enum or uses a separate `isJoker` flag |
+| **WS auth header convention** — frontend sends `Authorization: Bearer ...` in CONNECT frame; backend expects same | Verify | `frontend/src/lib/stomp.ts` ↔ `WebSocketAuthInterceptor` |
+| **Action feed text empty** — `useMatch.handleMatchEvent` appends events with `text: ''`; PT-BR formatting needs hooking | Polish | `frontend/src/hooks/useMatch.ts` + `match.actions.*` keys in `locales/pt-BR.json` |
+| **Color-blind shape overlay on troop badges** | A11y polish | `frontend/src/components/game/TroopBadge.tsx`; `COLOR_PATTERN` map exists in `types/game.ts` but not painted |
+| **Backend DTOs are best-effort** — frontend `types/api.ts` mirrors what specs implied; reconcile when the Java side serializes | Contract | Compare `frontend/src/types/api.ts` vs `jwarsv-sboot/.../dto/*.java` once a real call lands |
+
+### Mechanics P2/P3 (spec 002)
+| Item | Severity | Where |
+|---|---|---|
+| Reinforcement uses `>7` branch instead of `max(3, floor(N/2))` | P2 | `ClassicGameDist.java:154-161` |
+| Continent bonus deployment not constrained to that continent | P2 | `ClassicGameValidator.continentHasAvailableTroopsToAdd` |
+| Used cards reshuffled immediately (no discard pile) | P2 | `ExchangeCardsEvaluator` |
+| Elimination card transfer not random | P2 | `ClassicGameAttackResProcessor.transferCardsFromDefeatedPlayer` |
+| Jokers absent from deck and exchange logic | P2 | `EClassicCountryCard`, `ExchangeCardsEvaluator` |
+| 5-card forced exchange not enforced | P2 | `ClassicGamePActions` — block turn start |
+| +2 troops per owned-territory card in exchange | P2 | `ExchangeCardsEvaluator` |
+| Data fixes: dup country code 12 (OTW/ALA), continent ASI name typo "America do Sul", NVG→NVG self-loop, asymmetric BRA↔ARL, English country names SWD "Sweden"/MOS "Moscow", `EGameColors.BLUE.name="Blue"` | P3 | `EClassicCountries`, `EClassicContinents`, `CountriesBordersUtil`, `EGameColors` |
 
 ---
 

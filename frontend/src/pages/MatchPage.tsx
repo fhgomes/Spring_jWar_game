@@ -171,6 +171,9 @@ export default function MatchPage() {
     );
   }
 
+  // TODO: backend should include adjacency (or `validAttackTargets` / `validMoveTargets`)
+  // on the snapshot or on the selected source. For now we permissively highlight
+  // every non-owned (attack) or owned (move) territory. See spec 010 FR-011.
   const attackTargets =
     snapshot.currentPhase === 'ATTACK' && selectedSrc
       ? snapshot.countries
