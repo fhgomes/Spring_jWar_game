@@ -30,7 +30,7 @@ public class RoomMember {
 
     @MapsId("roomId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id", nullable = false)
+    @JoinColumn(name = "room_id")
     private Room room;
 
     @Column(name = "color", nullable = false, length = 20)

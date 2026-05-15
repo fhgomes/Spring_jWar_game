@@ -1,9 +1,12 @@
 package br.com.bnuuy.jwar.server.auth;
 
+import br.com.bnuuy.jwar.server.api.advice.CorrelationIdFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,9 +26,28 @@ import java.util.List;
 public class SecurityConfig {
 
     private final FirebaseAuthFilter firebaseAuthFilter;
+    private final CorrelationIdFilter correlationIdFilter;
 
     @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
+
+    @Bean
+    public FilterRegistrationBean<CorrelationIdFilter> correlationIdFilterRegistration() {
+        FilterRegistrationBean<CorrelationIdFilter> reg = new FilterRegistrationBean<>(correlationIdFilter);
+        reg.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        reg.addUrlPatterns("/*");
+        // OncePerRequestFilter guards against double-invocation, but keep auto-registration off
+        // to avoid the auto-registration bean and this one fighting for ordering.
+        return reg;
+    }
+
+    @Bean
+    public FilterRegistrationBean<FirebaseAuthFilter> firebaseAuthFilterRegistration() {
+        // Disable Spring Boot's auto-registration so this filter only runs via the Spring Security chain.
+        FilterRegistrationBean<FirebaseAuthFilter> reg = new FilterRegistrationBean<>(firebaseAuthFilter);
+        reg.setEnabled(false);
+        return reg;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -30,10 +30,7 @@ import br.com.bnuuy.jwar.server.repository.RoomRepository;
 import br.com.bnuuy.jwar.server.repository.UserRepository;
 import br.com.bnuuy.jwar.server.ws.GameEventPublisher;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
@@ -72,19 +69,13 @@ public class MatchService {
 
         ClassicGame game = new ClassicGame(new ClassicGameDist());
         ClassicGameLobby lobby = new ClassicGameLobby(game);
-        Map<UUID, User> users = new HashMap<>();
         for (RoomMember member : room.getMembers()) {
             User user = userRepository.findById(member.getUserId())
                 .orElseThrow(() -> new NotFoundException("Usuário do membro não encontrado"));
-            users.put(user.getId(), user);
             ClassicGamePlayer corePlayer = new ClassicGamePlayer(user.getId().toString(), user.getDisplayName());
             lobby.joinLobby(corePlayer);
         }
-        try {
-            lobby.startMatch();
-        } catch (GameRulesException ex) {
-            throw ex;
-        }
+        lobby.startMatch();
 
         Match match = new Match();
         match.setId(game.getMatchId());
@@ -125,13 +116,12 @@ public class MatchService {
                 throw new GameRulesException("Não é possível adicionar tropas fora da fase de adição");
             }
             actions.addTroops(seq, qty, countryCode);
-            return new CommandResult(GameEventType.TROOPS_ADDED, null);
+            return CommandResult.of(GameEventType.TROOPS_ADDED);
         });
     }
 
     @Transactional
     public AttackResponse attack(UUID matchId, UUID userId, int srcCountryCode, int tgtCountryCode) {
-        UUID resolvedMatchId = matchId;
         ReentrantLock lock = matchRegistry.lockFor(matchId);
         lock.lock();
         try {
@@ -171,7 +161,7 @@ public class MatchService {
             AttackResultDto resultDto = gameStateMapper.toAttackResult(vo);
             updateMatchAfter(match, game);
             GameStateSnapshot snapshot = gameStateMapper.toSnapshot(matchId, game);
-            eventPublisher.publishMatchEvent(resolvedMatchId, GameEventType.ATTACK_RESULT,
+            eventPublisher.publishMatchEvent(matchId, GameEventType.ATTACK_RESULT,
                 new AttackResponse(resultDto, snapshot));
             if (game.getMatchStatus() == ClassicGame.MatchStatus.FINISHED) {
                 publishMatchFinished(match, game, snapshot);
@@ -187,7 +177,7 @@ public class MatchService {
         return runCommand(matchId, userId, (game, seq) -> {
             ClassicGamePActions actions = new ClassicGamePActions(game);
             actions.moveTroops(seq, srcCountryCode, tgtCountryCode, qty);
-            return new CommandResult(GameEventType.TROOPS_MOVED, null);
+            return CommandResult.of(GameEventType.TROOPS_MOVED);
         });
     }
 
@@ -207,7 +197,7 @@ public class MatchService {
                 actions.endCurrentTurnMovePhase(seq);
                 eventType = GameEventType.TURN_CHANGED;
             }
-            return new CommandResult(eventType, null);
+            return CommandResult.of(eventType);
         });
     }
 
@@ -347,5 +337,10 @@ public class MatchService {
         CommandResult apply(ClassicGame game, int seq);
     }
 
-    private record CommandResult(GameEventType eventType, Object payload) {}
+    private record CommandResult(GameEventType eventType) {
+
+        static CommandResult of(GameEventType type) {
+            return new CommandResult(type);
+        }
+    }
 }
