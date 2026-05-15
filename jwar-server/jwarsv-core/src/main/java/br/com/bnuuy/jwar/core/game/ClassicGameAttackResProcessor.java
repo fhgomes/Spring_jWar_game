@@ -122,6 +122,17 @@ public class ClassicGameAttackResProcessor {
 			// Change ownership of the country
 			tgtCountry.changeOwner(attackingPlayer, srcCountry.getPlayerColor());
 
+			// Manual §7: transfer attacker dice count troops into the conquered country.
+			// The maximum equals the number of dice used in the last attack; minimum is 1.
+			// Default to the maximum so the conquered territory never sits at 0 troops.
+			int troopsToMove = Math.max(1, result.getAttackers() == null ? 1 : result.getAttackers().length);
+			troopsToMove = Math.min(troopsToMove, srcCountry.getTroopsCount() - 1);
+			if (troopsToMove < 1) {
+				troopsToMove = 1; // last-ditch: never leave conquered country at 0
+			}
+			srcCountry.removeTroops(troopsToMove);
+			tgtCountry.addTroops(troopsToMove);
+
 			// Check if the player has won the game by conquering countries
 			if (endGameEvaluator.hasPlayerWon(attackingPlayer)) {
 				log.info(format(PLAYER_WON_BY_CONQUERING_COUNTRIES,
@@ -143,7 +154,7 @@ public class ClassicGameAttackResProcessor {
 	}
 
 	private void implyDmg(AttackResultVO result, ClassicGameCountry srcCountry, ClassicGameCountry tgtCountry) {
-		srcCountry.removeTroops(result.getSrcCountry());
+		srcCountry.removeTroops(result.getSrcCountryLoss());
 		tgtCountry.removeTroops(result.getTargetCountryLoss());
 		if (tgtCountry.getTroopsCount() < 1) {
 			result.setConquered(true);

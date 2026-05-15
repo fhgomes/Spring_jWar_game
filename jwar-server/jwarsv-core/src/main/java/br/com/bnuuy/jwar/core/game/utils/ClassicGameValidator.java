@@ -3,7 +3,6 @@ package br.com.bnuuy.jwar.core.game.utils;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ADD;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ATTACK;
 import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_MOVE;
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
@@ -21,7 +20,7 @@ public class ClassicGameValidator {
 	private ClassicGameValidator() {}
 
 	public static void validatePlayersToStart(List<ClassicGamePlayer> players) {
-		if (isEmpty(players) || players.size() < 3) {
+		if (players == null || players.isEmpty() || players.size() < 3) {
 			throw new GameRulesException("Não é possível iniciar um jogo clássico com menos de 3 players");
 		}
 

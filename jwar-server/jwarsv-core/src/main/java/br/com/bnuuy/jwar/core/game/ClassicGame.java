@@ -18,8 +18,10 @@ import br.com.bnuuy.jwar.core.game.utils.EndGameEvaluator;
 import br.com.bnuuy.jwar.core.game.utils.ExchangeCardsEvaluator;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ClassicGame {
+
+	public enum MatchStatus { LOBBY, IN_PROGRESS, FINISHED }
 
 	private final ClassicGameDist classicGameDist;
 
@@ -77,6 +81,20 @@ public class ClassicGame {
 	@Setter
 	private int turnPhase;
 
+	@Getter
+	private MatchStatus matchStatus;
+
+	@Getter
+	private ClassicGamePlayer winner;
+
+	/**
+	 * Territories that have RECEIVED troops via the move action during the current
+	 * player's move phase. Manual §8: each troop may move only once per turn —
+	 * we enforce this by forbidding such territories from being a source of another
+	 * move in the same phase.
+	 */
+	private final Set<Integer> movedTroopsInto;
+
 
 	public ClassicGame(ClassicGameDist classicGameDist) {
 		this.classicGameDist = classicGameDist;
@@ -92,6 +110,9 @@ public class ClassicGame {
 		this.secondRound = false;
 		this.turnPhase = TURN_PHASE_ADD;
 		this.matchId = UUID.randomUUID();
+		this.matchStatus = MatchStatus.LOBBY;
+		this.winner = null;
+		this.movedTroopsInto = new HashSet<>();
 	}
 
 	public void startMatch(List<ClassicGamePlayer> lobbyPlayers) {
@@ -135,6 +156,7 @@ public class ClassicGame {
 		classicGameDist.initializeContinentOwners(continents, continentOwners);
 
 		currentPlayer = 1;
+		matchStatus = MatchStatus.IN_PROGRESS;
 		turnToNextPlayer();
 		//send update to all players
 		//let all players know its first player turn
@@ -149,7 +171,7 @@ public class ClassicGame {
 		if (endGameEvaluator.hasPlayerWon(currentPlayerObj)) {
 			log.info(format("Player [%s] has won the game by completing their objective at the end of their turn!",
 				currentPlayerObj.getNickName()));
-			// TODO: Handle game end
+			finishMatch(currentPlayerObj);
 			return;
 		}
 
@@ -162,6 +184,9 @@ public class ClassicGame {
 			hasConqueredCountryThisTurn = false;
 		}
 
+		// New turn — reset per-turn move tracking (Manual §8)
+		movedTroopsInto.clear();
+
 		this.turnPhase = TURN_PHASE_ADD;
 		setNextPlayer();
 		if (firstRound || secondRound) {
@@ -171,8 +196,7 @@ public class ClassicGame {
 				if (firstRound) {
 					firstRound = false;
 					secondRound = true;
-				}
-				if (secondRound) {
+				} else if (secondRound) {
 					secondRound = false;
 				}
 			}
@@ -181,6 +205,16 @@ public class ClassicGame {
 
 		classicGameDist.distributeRoundTroops(players.get(currentPlayer), continentOwners.get(currentPlayer));
 		//let all players know its next player turn
+	}
+
+	/**
+	 * Transitions the match to FINISHED with the given winner.
+	 * Called from turnToNextPlayer / attack when EndGameEvaluator detects victory.
+	 */
+	private void finishMatch(ClassicGamePlayer winner) {
+		this.winner = winner;
+		this.matchStatus = MatchStatus.FINISHED;
+		log.info(format("Match [%s] finished. Winner: [%s].", matchId, winner.getNickName()));
 	}
 
 	private void setNextPlayer() {
@@ -211,6 +245,24 @@ public class ClassicGame {
 		this.turnPhase = TURN_PHASE_MOVE;
 	}
 
+	public void endTurnMovePhase() {
+		// Move phase is the last in a turn — advance to next player
+		turnToNextPlayer();
+	}
+
+	/**
+	 * Tracks that the given country received troops during the current move phase,
+	 * preventing it from being a source for another move in the same turn
+	 * (Manual §8 — "Um exército pode ser deslocado uma única vez").
+	 */
+	public void markMovedInto(int countryCode) {
+		movedTroopsInto.add(countryCode);
+	}
+
+	public boolean hasMovedIntoThisTurn(int countryCode) {
+		return movedTroopsInto.contains(countryCode);
+	}
+
 	/**
 	 * Processes an attack between two countries.
 	 *
@@ -233,10 +285,8 @@ public class ClassicGame {
 			if (endGameEvaluator.hasPlayerWon(attackingPlayer)) {
 				log.info(format("Player [%s] has won the game by completing their objective after conquering [%s]!",
 					attackingPlayer.getNickName(), tgtCountry.getCountry().getName()));
-				// TODO: Handle game end
+				finishMatch(attackingPlayer);
 			}
-
-
 		}
 
 		return attackRes;

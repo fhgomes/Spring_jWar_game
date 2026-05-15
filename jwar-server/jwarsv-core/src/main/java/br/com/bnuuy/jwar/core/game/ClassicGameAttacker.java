@@ -10,13 +10,12 @@ public class ClassicGameAttacker {
 
 	public static AttackResultVO attack(ClassicGameCountry srcCountry, ClassicGameCountry tgtCountry) {
 		int attackPos = getAttackPos(srcCountry.getTroopsCount());
-		int defPos = getDefPos(srcCountry.getTroopsCount());
+		int defPos = getDefPos(tgtCountry.getTroopsCount());
 		int[] attackers = new int[attackPos];
 		int[] defense = new int[defPos];
 
 		rollDices(attackers);
 		rollDices(defense);
-
 
 		return doResult(srcCountry, attackers, tgtCountry, defense);
 	}
@@ -26,8 +25,9 @@ public class ClassicGameAttacker {
 
 		int srcLoss = 0;
 		int tgtLoss = 0;
-		for (int dpos = 0; dpos < attackers.length; dpos++) {
-			if (attackers[dpos] > defense [dpos]) {
+		int compared = Math.min(attackers.length, defense.length);
+		for (int dpos = 0; dpos < compared; dpos++) {
+			if (attackers[dpos] > defense[dpos]) {
 				tgtLoss += 1;
 			} else {
 				srcLoss += 1;
@@ -48,8 +48,7 @@ public class ClassicGameAttacker {
 		if (troopsCount > 2) {
 			return 3;
 		}
-
-		return troopsCount;
+		return Math.max(troopsCount, 0);
 	}
 
 	private static int getAttackPos(int troopsCount) {

@@ -6,6 +6,7 @@ import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.countryHasA
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isAddPhase;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isAttackPhase;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isCountryOwner;
+import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isMovePhase;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.isMyTurn;
 import static br.com.bnuuy.jwar.core.game.utils.ClassicGameValidator.playerHasAvailableTroopsToAdd;
 import static java.lang.String.format;
@@ -15,6 +16,7 @@ import br.com.bnuuy.jwar.core.game.domain.AttackResultVO;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
 import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
+import br.com.bnuuy.jwar.core.game.map.CountriesBordersUtil;
 import br.com.bnuuy.jwar.core.game.utils.ExchangeCardsEvaluator;
 import java.util.Arrays;
 import java.util.List;
@@ -57,11 +59,64 @@ public class ClassicGamePActions {
 		classicGame.endTurnAddPhase();
 	}
 
+	public void endCurrentTurnMovePhase(int srcPlayer) {
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		classicGame.endTurnMovePhase();
+	}
+
 	public void endCurrentTurn(int srcPlayer) {
 		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
 
 		//check if win (some conditions are valid on end of turn
 		classicGame.turnToNextPlayer();
+	}
+
+	/**
+	 * Moves troops between two contiguous own territories during the MOVE phase.
+	 * Manual §8: source must keep at least 1 occupation troop; each troop may be
+	 * moved only once per turn (territories that received troops cannot then be sources).
+	 *
+	 * @param srcPlayer the acting player
+	 * @param srcCountryId source country code
+	 * @param tgtCountryId target country code
+	 * @param qtdTroops number of troops to move (>= 1)
+	 * @throws GameRulesException if validation fails
+	 */
+	public void moveTroops(int srcPlayer, int srcCountryId, int tgtCountryId, int qtdTroops) {
+		isMyTurn(srcPlayer, classicGame.getCurrentPlayer());
+		isMovePhase(classicGame.getTurnPhase());
+
+		if (qtdTroops < 1) {
+			throw new GameRulesException("Quantidade de tropas a mover deve ser maior que zero");
+		}
+		if (srcCountryId == tgtCountryId) {
+			throw new GameRulesException("Origem e destino do movimento devem ser diferentes");
+		}
+
+		ClassicGameCountry srcCountry = classicGame.getCountry(srcCountryId);
+		ClassicGameCountry tgtCountry = classicGame.getCountry(tgtCountryId);
+		isCountryOwner(srcPlayer, srcCountry);
+		isCountryOwner(srcPlayer, tgtCountry);
+
+		if (!CountriesBordersUtil.hasBorder(srcCountry.getCountry(), tgtCountry.getCountry())) {
+			throw new GameRulesException("Não é possível mover tropas entre territórios não contíguos");
+		}
+
+		if (srcCountry.getTroopsCount() - qtdTroops < 1) {
+			throw new GameRulesException("É preciso manter ao menos 1 exército de ocupação no território de origem");
+		}
+
+		if (classicGame.hasMovedIntoThisTurn(srcCountryId)) {
+			throw new GameRulesException(
+				"Um exército pode ser deslocado uma única vez no mesmo turno (Manual §8)");
+		}
+
+		srcCountry.removeTroops(qtdTroops);
+		tgtCountry.addTroops(qtdTroops);
+		classicGame.markMovedInto(tgtCountryId);
+
+		log.info(format("Player [%d] moved [%d] troops from [%d] to [%d]",
+			srcPlayer, qtdTroops, srcCountryId, tgtCountryId));
 	}
 
 	public void addTroops(int srcPlayer, int qtdTroops, int tgtCountry) {
