@@ -1,0 +1,82 @@
+# jWar — local dev stack.
+#
+# Quick start:
+#   1. cp .env.example .env  (and edit secrets)
+#   2. place ./secrets/firebase-service-account.json (gitignored)
+#   3. make up   (or:  docker compose up -d)
+#   4. open http://localhost:8080
+#
+# Optional tooling (pgAdmin) is profile-gated:
+#   docker compose --profile dev-tools up -d
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: jwar-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-jwar}
+      POSTGRES_USER: ${DB_USERNAME:-jwar}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env (copy from .env.example)}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      # Exposed for local psql / GUI clients. Comment out if 5432 collides
+      # with a host-side Postgres.
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-jwar} -d ${DB_NAME:-jwar}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jwar:local
+    container_name: jwar-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: "jdbc:postgresql://postgres:5432/${DB_NAME:-jwar}"
+      DB_USERNAME: ${DB_USERNAME:-jwar}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env (copy from .env.example)}
+      FB_SERVICE_ACCOUNT_PATH: /secrets/firebase-service-account.json
+      FB_PROJECT_ID: ${FB_PROJECT_ID:-}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:8080}
+    volumes:
+      # Firebase service account JSON. The host-side file is gitignored — see
+      # .env.example and docs/docker.md for the placement instructions. Leave
+      # this mount in place even when the file is absent during very-first
+      # boot — compose will surface a clear error rather than silently
+      # bringing up a broken app.
+      - ./secrets/firebase-service-account.json:/secrets/firebase-service-account.json:ro
+    ports:
+      - "${APP_HOST_PORT:-8080}:8080"
+
+  # Optional: pgAdmin for browsing the database.
+  # Enable with:  docker compose --profile dev-tools up -d
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: jwar-pgadmin
+    restart: unless-stopped
+    profiles: ["dev-tools"]
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "${PGADMIN_HOST_PORT:-5050}:80"
+
+volumes:
+  postgres-data:
+    name: jwar-postgres-data

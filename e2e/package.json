@@ -1,0 +1,18 @@
+{
+  "name": "jwar-e2e",
+  "private": true,
+  "description": "Playwright end-to-end tests for jWar. See ./README.md.",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:chromium": "playwright test --project=chromium",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
+  }
+}
