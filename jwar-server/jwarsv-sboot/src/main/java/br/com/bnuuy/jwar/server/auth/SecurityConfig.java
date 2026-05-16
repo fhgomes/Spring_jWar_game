@@ -1,7 +1,9 @@
 package br.com.bnuuy.jwar.server.auth;
 
 import br.com.bnuuy.jwar.server.api.advice.CorrelationIdFilter;
+import jakarta.servlet.Filter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -25,15 +27,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final FirebaseAuthFilter firebaseAuthFilter;
-    private final CorrelationIdFilter correlationIdFilter;
+    // Inject as Filter interface (not concrete FirebaseAuthFilter) because Spring
+    // Modulith / async support may wrap the bean in a JDK dynamic proxy that loses
+    // the concrete type. The proxy still implements jakarta.servlet.Filter.
+    @Qualifier("firebaseAuthFilter")
+    private final Filter firebaseAuthFilter;
+
+    @Qualifier("correlationIdFilter")
+    private final Filter correlationIdFilter;
 
     @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
 
     @Bean
-    public FilterRegistrationBean<CorrelationIdFilter> correlationIdFilterRegistration() {
-        FilterRegistrationBean<CorrelationIdFilter> reg = new FilterRegistrationBean<>(correlationIdFilter);
+    public FilterRegistrationBean<Filter> correlationIdFilterRegistration() {
+        FilterRegistrationBean<Filter> reg = new FilterRegistrationBean<>(correlationIdFilter);
         reg.setOrder(Ordered.HIGHEST_PRECEDENCE);
         reg.addUrlPatterns("/*");
         // OncePerRequestFilter guards against double-invocation, but keep auto-registration off
@@ -42,9 +50,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public FilterRegistrationBean<FirebaseAuthFilter> firebaseAuthFilterRegistration() {
+    public FilterRegistrationBean<Filter> firebaseAuthFilterRegistration() {
         // Disable Spring Boot's auto-registration so this filter only runs via the Spring Security chain.
-        FilterRegistrationBean<FirebaseAuthFilter> reg = new FilterRegistrationBean<>(firebaseAuthFilter);
+        FilterRegistrationBean<Filter> reg = new FilterRegistrationBean<>(firebaseAuthFilter);
         reg.setEnabled(false);
         return reg;
     }
@@ -83,6 +91,24 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers(
+                    // Static SPA assets and React Router paths — index.html
+                    // is served either directly or via SpaController forward.
+                    "/",
+                    "/index.html",
+                    "/favicon.ico",
+                    "/favicon.svg",
+                    "/assets/**",
+                    "/static/**",
+                    "/login",
+                    "/signup",
+                    "/lobby",
+                    "/lobby/**",
+                    "/rooms/**",
+                    "/matches/**",
+                    "/me",
+                    "/me/**",
+                    "/goodbye",
+                    // Public API + tooling
                     "/api/health",
                     "/api/auth/register",
                     "/api/auth/login",

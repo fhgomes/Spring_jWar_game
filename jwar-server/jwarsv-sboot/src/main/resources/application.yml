@@ -17,6 +17,10 @@ spring:
     active: "${SPRING_PROFILES_ACTIVE:dev}"
   application:
     name: jwar-server-sb
+  aop:
+    # Force CGLIB (subclass) proxies so concrete filter beans like FirebaseAuthFilter
+    # stay assignable to their declared types when SecurityConfig injects them.
+    proxy-target-class: true
   datasource:
     url: "${DB_URL:jdbc:postgresql://${JWARSV_APP_DB_HOST:localhost}:${JWARSV_APP_DB_PORT:5432}/${JWARSV_APP_DB_NAME:jwarsv_db_dev}}"
     username: "${DB_USERNAME:${JWARSV_APP_DB_USER:ujwarsvdev}}"

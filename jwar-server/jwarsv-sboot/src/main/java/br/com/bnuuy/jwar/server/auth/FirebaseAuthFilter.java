@@ -51,6 +51,14 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        // Only enforce Firebase auth on API endpoints. Static SPA assets and
+        // client-side router paths (/, /login, /signup, /lobby, /rooms/*,
+        // /matches/*, /me/*, etc.) must pass through so the React bundle and
+        // SpaController forwards can serve index.html.
+        boolean isApiPath = path.startsWith("/api/");
+        if (!isApiPath) {
+            return true;
+        }
         return PUBLIC_PATTERNS.stream().anyMatch(p -> pathMatcher.match(p, path));
     }
 
