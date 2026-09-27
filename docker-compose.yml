@@ -12,7 +12,7 @@
 services:
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: jwar-postgres
     restart: unless-stopped
     environment:
@@ -20,11 +20,11 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-jwar}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env (copy from .env.example)}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     ports:
-      # Exposed for local psql / GUI clients. Comment out if 5432 collides
-      # with a host-side Postgres.
-      - "${POSTGRES_HOST_PORT:-5432}:5432"
+      # Exposed only on loopback for local psql / GUI clients. Never bind
+      # Postgres to 0.0.0.0 on the public VPS interface.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-jwar} -d ${DB_NAME:-jwar}"]
       interval: 5s
@@ -79,4 +79,4 @@ services:
 
 volumes:
   postgres-data:
-    name: jwar-postgres-data
+    name: jwar-postgres-data-pg18-20260521b
