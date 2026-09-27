@@ -1,0 +1,174 @@
+# jWar -- continuous integration.
+#
+# Triggered on every PR against `main` and every push to `main`.
+# Runs the following jobs (parallelizing where possible):
+#
+#   1. backend-test       -- Gradle test against the JVM (unit +
+#                            Testcontainers integration). Uploads JaCoCo
+#                            HTML on completion.
+#   2. frontend-typecheck -- npm ci + tsc --noEmit + lint.
+#   3. e2e                -- depends on (1) + (2). Boots the docker-compose
+#                            stack and runs Playwright. Uploads
+#                            playwright-report on completion.
+#
+# Security: all interpolations use trusted workflow context refs
+# (github.workflow, github.ref, hashFiles, runner.os). No
+# attacker-controllable string (issue title, PR body, commit message,
+# head_ref) is ever interpolated into a `run:` block.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-test:
+    name: Backend (unit + integration)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('jwar-server/**/*.gradle', 'jwar-server/**/gradle.properties', 'jwar-server/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Make wrapper executable
+        working-directory: jwar-server
+        run: chmod +x ./gradlew
+
+      - name: Run unit + integration tests
+        working-directory: jwar-server
+        run: ./gradlew --no-daemon test
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            jwar-server/**/build/reports/tests/test
+            jwar-server/**/build/reports/jacoco
+            jwar-server/**/build/test-results/test
+          if-no-files-found: ignore
+
+  frontend-typecheck:
+    name: Frontend (typecheck + lint)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck --if-present
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint --if-present
+
+  e2e:
+    name: E2E (Playwright via docker compose)
+    needs: [backend-test, frontend-typecheck]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      DB_PASSWORD: ci-test-pw
+      DB_USERNAME: jwar
+      DB_NAME: jwar
+      APP_BASE_URL: http://localhost:8080
+      BASE_URL: http://localhost:8080
+      FB_PROJECT_ID: jwar-ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Prepare .env
+        run: cp .env.example .env
+
+      - name: Prepare Firebase service-account stub
+        run: |
+          mkdir -p secrets
+          printf '{"type":"service_account","project_id":"jwar-ci"}\n' > secrets/firebase-service-account.json
+
+      - name: Build & start the stack
+        run: docker compose up -d --build --wait
+        timeout-minutes: 15
+
+      - name: Show service status (debug)
+        if: always()
+        run: docker compose ps
+
+      - name: Install Playwright deps
+        working-directory: e2e
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+          npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        working-directory: e2e
+        run: npm test
+
+      - name: Tear down the stack
+        if: always()
+        run: docker compose down -v
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          if-no-files-found: ignore

@@ -1,0 +1,70 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE / editor metadata
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+
+# Build artifacts (frontend)
+**/node_modules
+frontend/dist
+frontend/build
+
+# Build artifacts (backend / Gradle)
+.gradle
+**/build
+**/out
+**/bin
+**/target
+*.jar
+*.war
+*.ear
+*.class
+
+# Native image work dirs
+**/native-image
+
+# Logs and caches
+**/*.log
+**/hs_err_pid*
+**/replay_pid*
+**/.cache
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+secrets/
+**/firebase-service-account*.json
+
+# Test results
+**/test-results
+**/playwright-report
+e2e/test-results
+e2e/playwright-report
+e2e/node_modules
+
+# Documentation we don't need in the image
+docs
+specs
+README.md
+AGENTS.md
+CLAUDE.md
+LICENSE
+*.md
+!frontend/README.md
+
+# Spec-kit / Claude config (not needed at build time)
+.specify
+.claude
+.ai
+.remember
+
+# Misc
+.DS_Store
+Thumbs.db

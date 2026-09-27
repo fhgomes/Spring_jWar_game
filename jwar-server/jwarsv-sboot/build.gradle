@@ -31,6 +31,9 @@ dependencies {
     implementation ("org.springframework.boot:spring-boot-starter-web") {
         exclude module: 'spring-boot-starter-tomcat'
     }
+    implementation "org.springframework.boot:spring-boot-starter-validation"
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.boot:spring-boot-starter-websocket"
     implementation "io.micrometer:micrometer-tracing-bridge-brave"
     implementation "io.sentry:sentry-spring-boot-starter-jakarta"
     implementation "org.flywaydb:flyway-core:${flywayVersion}"
@@ -44,6 +47,16 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jacksonDataType8Version}"
 
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0"
+
+    // MapStruct
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    annotationProcessor "org.projectlombok:lombok-mapstruct-binding:0.2.0"
+
+    // Rate limiting (in-memory Caffeine-backed buckets)
+    implementation "com.bucket4j:bucket4j-core:8.10.1"
+
     runtimeOnly "com.h2database:h2"
     runtimeOnly "org.postgresql:postgresql:${postgreSqlVersion}"
     runtimeOnly "io.micrometer:micrometer-registry-prometheus"
@@ -51,7 +64,20 @@ dependencies {
     runtimeOnly "org.springframework.modulith:spring-modulith-observability"
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "org.springframework.boot:spring-boot-starter-websocket"
+    testImplementation "org.springframework.security:spring-security-test"
     testImplementation "org.springframework.modulith:spring-modulith-starter-test"
+
+    // Testcontainers -- Postgres + JUnit 5 integration. The BOM aligns
+    // every testcontainers-* module on the same version.
+    testImplementation platform("org.testcontainers:testcontainers-bom:1.20.1")
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation "org.testcontainers:junit-jupiter"
+    testImplementation "org.testcontainers:postgresql"
+
+    // Postgres JDBC driver is a runtimeOnly above; expose it to tests
+    // too (FlywayMigrationsTest drives it directly).
+    testImplementation "org.postgresql:postgresql:${postgreSqlVersion}"
 }
 
 test {
