@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: "jdbc:h2:mem:jwar_dev;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+    username: sa
+    password: ""
+    driverClassName: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+logging:
+  level:
+    br.com.bnuuy.jwar: DEBUG
+
+app:
+  firebase:
+    # When empty in dev, the server uses a stub that accepts tokens of the form "dev:<uid>"
+    service-account-path: "${FB_SERVICE_ACCOUNT_PATH:}"
+  cors:
+    allowed-origins: "http://localhost:5173,http://127.0.0.1:5173"

@@ -1,0 +1,91 @@
+package br.com.bnuuy.jwar.core.game.utils;
+
+import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ADD;
+import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_ATTACK;
+import static br.com.bnuuy.jwar.core.game.ClassicGameConstants.TURN_PHASE_MOVE;
+
+import br.com.bnuuy.jwar.core.exceptions.GameRulesException;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameContinent;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGameCountry;
+import br.com.bnuuy.jwar.core.game.domain.ClassicGamePlayer;
+import br.com.bnuuy.jwar.core.game.map.CountriesBordersUtil;
+import java.util.HashSet;
+import java.util.List;
+
+public class ClassicGameValidator {
+
+	private static final String NOT_ENOUGH_TROOPS_IN_CONTINENT = "Not enough troops available in continent to add";
+
+
+	private ClassicGameValidator() {}
+
+	public static void validatePlayersToStart(List<ClassicGamePlayer> players) {
+		if (players == null || players.isEmpty() || players.size() < 3) {
+			throw new GameRulesException("Não é possível iniciar um jogo clássico com menos de 3 players");
+		}
+
+		if (players.size() > 6) {
+			throw new GameRulesException("Não é possível iniciar um jogo clássico com mais de 6 players");
+		}
+
+		if (new HashSet<>(players).size() != players.size()) {
+			throw new GameRulesException("Não é possível iniciar um jogo clássico jogadores repetidos");
+		}
+	}
+
+	public static void isCountryOwner(int srcPlayer, ClassicGameCountry classicGameCountry) {
+		if (classicGameCountry.getOwnerCode() != srcPlayer) {
+			throw new GameRulesException("Não é possível exercutar a ação, o país de origem não pertence a voce");
+		}
+	}
+
+	public static void playerHasAvailableTroopsToAdd(ClassicGamePlayer player, int qtdTroops) {
+		if (player.getAvailableTroops() < qtdTroops)
+			throw new GameRulesException("Não é possível adicionar tropas, excede o limite disponível");
+	}
+	public static void continentHasAvailableTroopsToAdd(ClassicGameContinent continent, int qtdTroops) {
+
+		if (qtdTroops > continent.getAvailableTroopsCount()) {
+			throw new GameRulesException(NOT_ENOUGH_TROOPS_IN_CONTINENT);
+		}
+	}
+
+	public static void isMyTurn(int srcPlayer, int currentPlayer) {
+		if (srcPlayer != currentPlayer) {
+			throw new GameRulesException("Não é possível executar esta ação fora do seu turno");
+		}
+	}
+
+	public static void countryCanBeTarget(ClassicGameCountry src, ClassicGameCountry target) {
+		if (src.getOwnerCode() == target.getOwnerCode()) {
+			throw new GameRulesException("Não é possível atacar um país que te pertence");
+		}
+		if (!CountriesBordersUtil.hasBorder(src.getCountry(), target.getCountry())) {
+			throw new GameRulesException("Não é possível atacar o país de ortigem e destino não tem fronteira");
+		}
+	}
+
+	public static void countryHasAttackTroops(ClassicGameCountry country) {
+		if (country.getTroopsCount() < 2) {
+			throw new GameRulesException("Não é possível atacar de um país com apenas 1 soldado");
+		}
+	}
+
+	public static void isMovePhase(int turnPhase) {
+		if (turnPhase != TURN_PHASE_MOVE) {
+			throw new GameRulesException("Não é possível mover tropas fora da fase de movimento");
+		}
+	}
+
+	public static void isAddPhase(int turnPhase) {
+		if (turnPhase != TURN_PHASE_ADD) {
+			throw new GameRulesException("Não é possível adicionar tropas fora da fase de adição");
+		}
+	}
+
+	public static void isAttackPhase(int turnPhase) {
+		if (turnPhase != TURN_PHASE_ATTACK) {
+			throw new GameRulesException("Não é possível atacar fora da fase de ataques");
+		}
+	}
+}

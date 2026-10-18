@@ -45,6 +45,8 @@ subprojects {
 		implementation 'io.netty:netty-common:4.1.70.Final'
 
 		testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+		testImplementation "org.mockito:mockito-core:${mockitoVersio}"
+		testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersio}"
 		testRuntimeOnly(
 				"org.junit.platform:junit-platform-launcher",
 				"org.junit.jupiter:junit-jupiter-engine:${junitVersion}",

@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: "jdbc:h2:mem:jwar_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE"
+    username: sa
+    password: ""
+    driverClassName: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    clean-disabled: false
+
+logging:
+  level:
+    ROOT: WARN
+    br.com.bnuuy.jwar: INFO
+
+app:
+  firebase:
+    service-account-path: ""
+  cors:
+    allowed-origins: "http://localhost:5173"
