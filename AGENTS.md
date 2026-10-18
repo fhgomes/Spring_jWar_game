@@ -9,6 +9,12 @@
 
 ---
 
+## Codex runtime notes
+
+This file is the shared entry point; [`CLAUDE.md`](CLAUDE.md) is supplementary reference, not an automatic Codex import. Check `git status --short` before edits and preserve existing changes. Claude skills, hooks, permissions and slash commands do not automatically execute in Codex. When a Spec-Kit command is unavailable, read its instructions and `.specify/templates/`, then maintain the same spec/plan/tasks artifacts manually with available tools.
+
+The repo also contains a React SPA at [`frontend/`](frontend/README.md) and a separate Playwright project at [`e2e/`](e2e/README.md). Commands below are checked against local manifests/configuration; they have not been executed as part of the onboarding review. Frontend checks from `frontend/`: `npm run typecheck`, `npm run lint`, `npm run build` (Node 20+, dependencies installed). There is no frontend unit-test script. E2E from `e2e/`: `npm run test:chromium` requires a running local stack and browsers; the current auth/match specs are skipped, so a green command does not establish those flows work.
+
 ## 1. Project at a glance
 
 **jWar** (`bnuuy-war`) is a digital implementation of the classic
@@ -72,11 +78,13 @@ Run from `jwar-server/`:
 
 ```bash
 ./gradlew clean                                  # clean
-./gradlew build                                  # compile + run all tests
-./gradlew test                                   # tests only
-./gradlew bootRun -Dspring.profiles.active=dev   # run app locally (H2)
+./gradlew build                                  # compile + configured test suite
+./gradlew test                                   # configured test suite
+./gradlew :jwarsv-sboot:bootRun -PspringProfile=dev # run app locally (H2)
 ./gradlew clean bootBuildImage                   # build OCI image
 ```
+
+The Boot module passes the Gradle `springProfile` property to the app (`-PspringProfile=dev`, default in `gradle.properties`). The separate `-PbuildProfile` selects `gradle/profile_*.gradle` for build/Sonar configuration. `gradle/tests.gradle` excludes `slow` and `integration` tags from the normal test task. Report that coverage limit rather than calling `build` an all-tests gate.
 
 Any code change MUST pass `./gradlew build` before being considered done
 (Constitution principle II + Development Workflow).
