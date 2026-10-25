@@ -1,20 +1,8 @@
 plugins {
     id "java"
-	id "io.spring.dependency-management" version "${springDepManagementPluginVersion}"
-    id "org.hibernate.orm" version "${hibernateOrmPluginVersion}"
 }
 
-
 dependencies {
-
-    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
-    implementation "org.springframework.boot:spring-boot-starter-data-rest"
-    implementation "com.google.firebase:firebase-admin"
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
-	implementation "com.opencsv:opencsv:${openCSVVersion}"
-
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
-
     testImplementation platform("org.junit:junit-bom:${junitVersion}")
     testImplementation "org.junit.jupiter:junit-jupiter"
 }
@@ -23,10 +11,39 @@ test {
     useJUnitPlatform()
 }
 
-
 jar {
     manifest {
         attributes 'Implementation-Title': 'jwarsv-core',
                 'Implementation-Version': version
     }
 }
+
+// Constitution Principle I — verify jwarsv-core stays framework-free
+tasks.register('verifyCorePurity') {
+    description = 'Fails the build if forbidden packages reappear in jwarsv-core source.'
+    group = 'verification'
+    doLast {
+        def forbidden = ['org.springframework', 'jakarta.persistence', 'com.google.firebase',
+                         'jakarta.servlet', 'org.hibernate', 'com.fasterxml.jackson',
+                         'io.sentry', 'org.mapstruct', 'com.opencsv']
+        def srcDir = file('src/main/java')
+        def violations = []
+        if (srcDir.exists()) {
+            srcDir.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+                if (f.name.endsWith('.java')) {
+                    def text = f.text
+                    forbidden.each { pkg ->
+                        if (text.contains("import ${pkg}.")) {
+                            violations << "${f.path}: forbidden import ${pkg}"
+                        }
+                    }
+                }
+            }
+        }
+        if (!violations.isEmpty()) {
+            throw new GradleException("Core purity violations:\n  " + violations.join('\n  '))
+        }
+        logger.lifecycle('jwarsv-core purity OK')
+    }
+}
+check.dependsOn verifyCorePurity
